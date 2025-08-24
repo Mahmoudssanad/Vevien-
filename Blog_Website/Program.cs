@@ -1,10 +1,21 @@
 using Blog_Website.Models.Data;
+using Blog_Website.Models.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    // «·—„Ê“ œÌ ﬂ·Â« Êﬂ· «·Õ—› Ê«·„”«›«  ﬂ„«‰ UserName field ⁄‘«‰ Ìﬁ»· ›Ì «· 
+    options.User.AllowedUserNameCharacters =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ";
+})
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("constr")));
 

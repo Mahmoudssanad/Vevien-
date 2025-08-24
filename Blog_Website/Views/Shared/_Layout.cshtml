@@ -25,6 +25,12 @@
                         </li>
                     </ul>
                 </div>
+
+                <form id="logoutForm">
+                    @Html.AntiForgeryToken()
+                    <button id="logoutBtn" type="button" class="btn btn-danger">Logout</button>
+                </form>
+
             </div>
         </nav>
     </header>

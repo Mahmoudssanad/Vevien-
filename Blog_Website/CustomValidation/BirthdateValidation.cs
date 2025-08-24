@@ -13,6 +13,7 @@ namespace Blog_Website.CustomValidation
             {
                 return new ValidationResult("Invaild Date syntax");
             }
+
             var today = DateTime.Today;
 
             var result = today.Year - birthdate.Year;
