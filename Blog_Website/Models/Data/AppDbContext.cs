@@ -17,6 +17,7 @@ namespace Blog_Website.Models.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Follow> Follows { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<OTP> OTPs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

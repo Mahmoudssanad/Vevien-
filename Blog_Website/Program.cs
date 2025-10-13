@@ -1,6 +1,9 @@
 using Blog_Website.Models.Data;
 using Blog_Website.Models.Entities;
+using Blog_Website.Services;
+using Blog_Website.Services.IServices;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,16 +11,44 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddHttpContextAccessor();
+
+// √ﬂÀ— „‰ ⁄œœ „⁄Ì‰ Œ·«· › —… “„‰Ì… „Õœœ… API Ã«Â“ Ì„‰⁄ «·„” Œœ„ „‰ ÿ·» ‰›” «·‹ Middleware 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("otpResendPolicy", limiterOptions =>
+    {
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.PermitLimit = 1; // „”„ÊÕ „—Â ﬂ· œﬁÌﬁ…
+        limiterOptions.QueueLimit = 0;
+    });
+});
+
+// Register session service
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+});
+
+// Register DbContext service
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("constr")));
+
+// Register Identity service
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // «·—„Ê“ œÌ ﬂ·Â« Êﬂ· «·Õ—› Ê«·„”«›«  ﬂ„«‰ UserName field ⁄‘«‰ Ìﬁ»· ›Ì «· 
+    // «·—„Ê“ œÌ ﬂ·Â« Êﬂ· «·Õ—Ê› Ê«·„”«›«  ﬂ„«‰ UserName field ⁄‘«‰ Ìﬁ»· ›Ì «· 
     options.User.AllowedUserNameCharacters =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ";
 })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("constr")));
+// Register some services
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IPostService, PostService>();
+
 
 var app = builder.Build();
 
@@ -30,6 +61,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseSession();
+app.UseRateLimiter();
 app.UseRouting();
 
 app.UseAuthorization();

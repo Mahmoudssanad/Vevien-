@@ -9,7 +9,11 @@ namespace Blog_Website.Models.Entities
 
         public string? Address { get; set; }
 
+        public string? ImageURL { get; set; } = "~/images/default-profile.png";
+
         public GenderEnum Gender { get; set; }
+
+        public bool IsDeleted { get; set; }
 
         public ICollection<Post> Posts { get; set; }
         public ICollection<Like> Likes { get; set; }

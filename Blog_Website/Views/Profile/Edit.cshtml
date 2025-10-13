@@ -1,0 +1,105 @@
+﻿@using Blog_Website.Enums
+@model EditViewModel
+
+@{
+    ViewData["Title"] = "Edit Page";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4 text-center fw-bold">Edit Profile</h3>
+
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Profile Image -->
+                        <div class="text-center mb-4">
+                            <img id="profilePreview"
+                                 src="@Model.ImageUrl"
+                                 alt="Profile"
+                                 class="rounded-circle mb-3"
+                                 style="width: 120px; height: 120px; object-fit: cover;">
+
+                            <div>
+                                <label class="btn btn-outline-secondary btn-sm mt-2">
+                                    <input asp-for="Image" type="file" accept="image/*" hidden onchange="previewImage(event)">
+                                    Change Photo
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Gender -->
+                        <div class="mb-3">
+                            <label asp-for="Gender" class="form-label fw-semibold"></label>
+                            <select asp-for="Gender" class="form-select">
+                                <option value="">Select Gender</option>
+                                @foreach (var gender in Enum.GetValues(typeof(GenderEnum)))
+                                {
+                                    <option value="@gender" selected="@(gender.Equals(Model.Gender) ? "selected" : null)">
+                                        @gender
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="Gender" class="text-danger"></span>
+                        </div>
+
+                        <!-- Birthdate -->
+                        <div class="mb-3">
+                            <label asp-for="Birthdate" class="form-label fw-semibold"></label>
+                            <input asp-for="Birthdate" class="form-control" type="date" />
+                            <span asp-validation-for="Birthdate" class="text-danger"></span>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label fw-semibold"></label>
+                            <input asp-for="Address" class="form-control" placeholder="Enter your address" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="mb-3">
+                            <label asp-for="Phone" class="form-label fw-semibold"></label>
+                            <input asp-for="Phone" class="form-control" placeholder="Enter your phone number" />
+                            <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a asp-action="Profile" asp-route-userId="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value"
+                               class="text-decoration-none text-muted">
+                                ← Back to Profile
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-4">
+        <a asp-controller="Profile" asp-action="ChangePassword"
+           class="btn btn-light border w-100 text-dark fw-semibold"
+           style="border-radius: 10px;">
+            Change Password
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const preview = document.getElementById('profilePreview');
+                preview.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
+}

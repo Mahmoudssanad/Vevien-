@@ -1,4 +1,5 @@
-﻿@model Blog_Website.ViewModel.LoginViewModel
+﻿
+@model LoginViewModel
 
 @{
     ViewData["Title"] = "Login";
@@ -40,6 +41,10 @@
             <p class="mb-0">
                 Don't have an account?
                 <a asp-action="Register" class="text-decoration-none">Sign Up</a>
+            </p>
+            <p class="mb-0">
+                Forget Password?
+                <a asp-action="ForgetPassword" class="text-decoration-none">Forget Password</a>
             </p>
         </div>
     </div>
