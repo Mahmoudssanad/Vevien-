@@ -38,22 +38,20 @@ namespace Blog_Website.Services
             }).ToList();
         }
 
-        public async Task ChangePassword(ChangePasswordViewModel model)
+        public async Task<IdentityResult> ChangePassword(ChangePasswordViewModel model)
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var user = await _userManager.FindByIdAsync(userId);
 
-            if(user != null)
+            if(user == null)
             {
-                var found = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
-
-                if (found.Succeeded)
-                {
-                    await _userManager.UpdateAsync(user);
-                }
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
             }
 
+            var changePasswordResult = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+            return changePasswordResult;
         }
     }
 }

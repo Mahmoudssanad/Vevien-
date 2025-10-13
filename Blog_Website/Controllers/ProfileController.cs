@@ -132,15 +132,22 @@ namespace Blog_Website.Controllers
         [AutoValidateAntiforgeryToken]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await _profileService.ChangePassword(model);
+                return View(model);
+            }
+            var result = await _profileService.ChangePassword(model);
 
-                ViewBag.Message = "Password changed successfully";
-
+            if (result.Succeeded)
+            {
+                TempData["Message"] = "Password changed successfully.";
                 return RedirectToAction("Login", "Account");
             }
-            ViewBag.Message = "Something wrong. Please try again";
+
+            foreach(var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
             return View(model);
         }
     }

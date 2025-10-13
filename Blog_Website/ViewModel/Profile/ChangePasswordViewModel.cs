@@ -9,6 +9,8 @@ namespace Blog_Website.ViewModel.Profile
         [DisplayName("Current Password")]
         public string CurrentPassword { get; set; }
 
+        [MaxLength(32, ErrorMessage = "must be greater than 8 and less than or equal 32")]
+        [MinLength(8, ErrorMessage = "must be greater than 8 and less than or equal 32")]
         [DataType(DataType.Password)]
         [DisplayName("New Password")]
         public string NewPassword { get; set; }
