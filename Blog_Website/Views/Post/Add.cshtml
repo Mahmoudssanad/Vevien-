@@ -1,0 +1,74 @@
+﻿@using Blog_Website.ViewModel.Post
+@model PostViewModel
+
+@{
+    ViewData["Title"] = "Create Post";
+}
+
+<div class="container py-5 d-flex justify-content-center">
+    <div class="card shadow-sm" style="max-width: 500px; width: 100%; border-radius: 15px;">
+        <div class="card-body">
+            <h4 class="fw-bold text-center mb-4">Create New Post</h4>
+
+            <form asp-action="Add" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <!-- Image Upload -->
+                <div class="mb-3 text-center">
+                    <label for="ImageFile" class="form-label fw-semibold">Upload Image</label>
+                    <input asp-for="ImageFile" type="file" class="form-control text-center" accept="image/*" />
+                    <span asp-validation-for="ImageFile" class="text-danger"></span>
+
+                    <div class="mt-3">
+                        <img id="preview" src="~/images/placeholder.jpg" class="img-fluid rounded"
+                             style="max-height: 250px; display:none; object-fit: cover;" />
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="mb-3">
+                    <label asp-for="Content" class="form-label fw-semibold">Caption</label>
+                    <textarea asp-for="Content" class="form-control" rows="3" placeholder="Write something..."></textarea>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+
+                <!-- Visibility -->
+                <div class="form-check form-switch mb-3">
+                    <input asp-for="Public" class="form-check-input" type="checkbox" />
+                    <label asp-for="Public" class="form-check-label">Make Post Public</label>
+                </div>
+
+                <!-- Visible -->
+                <div class="form-check form-switch mb-4">
+                    <input asp-for="Visible" class="form-check-input" type="checkbox" checked />
+                    <label asp-for="Visible" class="form-check-label">Visible For Friends</label>
+                </div>
+
+                <!-- Submit -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" style="border-radius: 10px;">
+                        Share Post
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+        <script>
+            // Preview uploaded image before submitting
+            document.querySelector('#ImageFile').addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const img = document.querySelector('#preview');
+                    img.src = ev.target.result;
+                    img.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+        </script>
+}
