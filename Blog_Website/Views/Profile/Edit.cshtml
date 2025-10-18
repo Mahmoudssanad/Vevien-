@@ -18,10 +18,11 @@
                         <!-- Profile Image -->
                         <div class="text-center mb-4">
                             <img id="profilePreview"
-                                 src="@Model.ImageUrl"
-                                 alt="Profile"
-                                 class="rounded-circle mb-3"
-                                 style="width: 120px; height: 120px; object-fit: cover;">
+                                 src="@(string.IsNullOrEmpty(Model.ImageUrl)
+                                ? Url.Content("~/images/profile/default.png")
+                                : Url.Content(Model.ImageUrl))"
+                                 class="rounded-circle me-2"
+                                 style="width: 100px; height: 100px; object-fit: cover;" />
 
                             <div>
                                 <label class="btn btn-outline-secondary btn-sm mt-2">
@@ -97,9 +98,10 @@
             const reader = new FileReader();
             reader.onload = function () {
                 const preview = document.getElementById('profilePreview');
-                preview.src = reader.result;
+                preview.src = reader.result; // يظهر الصورة الجديدة فوراً
             };
             reader.readAsDataURL(event.target.files[0]);
         }
     </script>
 }
+

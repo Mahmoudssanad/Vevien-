@@ -1,4 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
 
 <!DOCTYPE html>
 <html lang="en">
@@ -30,7 +31,7 @@
                         {
                             <li class="nav-item">
                                 @* هيخش علي اللي مسجل دخول  *@
-                                <a class="nav-link" asp-controller="Profile" asp-action="Profile">
+                                <a class="nav-link" asp-controller="Profile" asp-action="Profile" asp-route-userId="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value">
                                     <i class="bi bi-person-circle"></i> Profile
                                 </a>
                             </li>
@@ -77,3 +78,4 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">

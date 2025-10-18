@@ -1,5 +1,6 @@
 ﻿using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
+using Blog_Website.ViewModel.Post;
 using Blog_Website.ViewModel.Profile;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +13,17 @@ namespace Blog_Website.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHost;
         private readonly IProfileService _profileService;
+        private readonly IPostService _postService;
+        private readonly IFollowService _followService;
 
-        public ProfileController(UserManager<ApplicationUser> userManager, IWebHostEnvironment webHost, IProfileService profileService)
+        public ProfileController(UserManager<ApplicationUser> userManager,
+            IWebHostEnvironment webHost, IProfileService profileService, IPostService postService, IFollowService followService)
         {
             _userManager = userManager;
             _webHost = webHost;
             _profileService = profileService;
+            _postService = postService;
+            _followService = followService;
         }
 
         [HttpGet]
@@ -25,6 +31,7 @@ namespace Blog_Website.Controllers
         {
             ApplicationUser user;
             bool flag = false;
+
             if (string.IsNullOrEmpty(userId))
             {
                 user = await _userManager.GetUserAsync(User);
@@ -33,8 +40,23 @@ namespace Blog_Website.Controllers
             else
                 user = await _userManager.FindByIdAsync(userId);
 
+            var userPosts = await _postService.GetAllUserPostsAsync(userId);
+
+            if (userId == User.FindFirstValue(ClaimTypes.NameIdentifier))
+            {
+                flag = true;
+                userPosts = await _postService.MyPosts(userId);
+            }
+
             if (user == null)
                 return NotFound();
+
+            var currentUserId = _userManager.GetUserId(User);
+
+            var isFollow = await _followService.IsFollowingAsync(userId, currentUserId);
+
+            var followersCount = await _followService.FollowersCountAsync(userId);
+            var followingsCount = await _followService.FollowingCountAsync(userId);
 
             var userProfile = new ProfileViewModel
                 {
@@ -43,7 +65,12 @@ namespace Blog_Website.Controllers
                     Image = user.ImageURL,
                     BirthDate = user.Birthdate,
                     UserId = user.Id,
-                    IsOwner = flag
+                    IsOwner = flag,
+                    Posts = userPosts,
+                    IsFollow = isFollow,
+                    CountFollowers = followersCount,
+                    CountFollowing = followingsCount,
+                    User = user
                 };
 
 
@@ -74,11 +101,11 @@ namespace Blog_Website.Controllers
         public async Task<IActionResult> Edit(EditViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
 
             if (ModelState.IsValid)
             {
-                var imagePath = "~/images/profile/default.png";
+                var imagePath = user.ImageURL;
 
                 if(model.Image != null)
                 {
@@ -92,6 +119,14 @@ namespace Blog_Website.Controllers
                     {
                         await model.Image.CopyToAsync(stream);
                     }
+
+                    if (!string.IsNullOrEmpty(user.ImageURL) && user.ImageURL != "/images/profile/default.png")
+                    {
+                        var oldImagePath = Path.Combine(_webHost.WebRootPath, $"images/profile/{user.ImageURL}");
+                        if (System.IO.File.Exists(oldImagePath))
+                            System.IO.File.Delete(oldImagePath);
+                    }
+
 
                     imagePath = $"/images/profile/{fileName}";
                 }

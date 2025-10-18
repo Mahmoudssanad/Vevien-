@@ -3,6 +3,7 @@ using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
 using Blog_Website.ViewModel.Post;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using System.Runtime.InteropServices;
@@ -15,12 +16,14 @@ namespace Blog_Website.Services
         private readonly AppDbContext _context;
         private readonly IHttpContextAccessor _http;
         private readonly IWebHostEnvironment _webHost;
+        private readonly IFollowService _followService;
 
-        public PostService(AppDbContext context, IHttpContextAccessor http, IWebHostEnvironment webHost)
+        public PostService(AppDbContext context, IHttpContextAccessor http, IWebHostEnvironment webHost, IFollowService followService)
         {
             _context = context;
             _http = http;
             _webHost = webHost;
+            _followService = followService;
         }
 
         public async Task AddAsync(PostViewModel model)
@@ -30,6 +33,10 @@ namespace Blog_Website.Services
             if (model != null && userId != null)
             {
                 string postPath = string.Empty;
+
+                if (model.Content == null && model.ImageFile == null)
+                    throw new Exception("Post should contains Image or Content");
+                   
 
                 if (model.ImageFile != null)
                 {
@@ -73,11 +80,20 @@ namespace Blog_Website.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Post>> GetAllUserPostsAsync(string userId)
+        public async Task<List<PostViewModel>> GetAllUserPostsAsync(string userId)
         {
             var userPosts = await _context.Posts
                 .Include(x => x.ApplicationUser)
                 .Where(x => x.UserId == userId && x.Visible)
+                .OrderByDescending(x => x.CreatedDate)
+                .Select(x => new PostViewModel
+                {
+                    Id = x.Id,
+                    Visible = x.Visible,
+                    Content = x.Content,
+                    ImageUrl = x.ImageUrl,
+                    Public = x.Public
+                })
                 .ToListAsync();
 
             return userPosts;
@@ -94,10 +110,17 @@ namespace Blog_Website.Services
 
         public async Task<List<Post>> GetFriendsPosts()
         {
-            // Add Follow in this service when finished
+            var currentUserId = _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Follow اللي انا عامل ليهم Users روحت عشان اجيب ال 
+            var followedUsers = await _followService.GetFollowersAsync(currentUserId);
+
+            var followedUsersId = followedUsers.Select(x => x.Id).ToList();
+
             var allFriendsPosts = await _context.Posts
                 .Include(x => x.ApplicationUser)
-                .Where(x => x.Visible)
+                .Where(x => x.Visible && followedUsersId.Contains(x.UserId) || (x.UserId == currentUserId && x.Visible))
+                .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
 
             return allFriendsPosts;
@@ -108,9 +131,27 @@ namespace Blog_Website.Services
             var allpublicPosts = await _context.Posts
                 .Include(x => x.ApplicationUser)
                 .Where(x => x.Public && x.Visible)
+                .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
 
             return allpublicPosts;
+        }
+
+        public async Task<List<PostViewModel>> MyPosts(string userId)
+        {
+            var myPosts = await _context.Posts
+                .Where(x => x.UserId == userId)
+                .Select(x => new PostViewModel
+                {
+                    Id = x.Id,
+                    Visible = x.Visible,
+                    Content = x.Content,
+                    ImageUrl = x.ImageUrl,
+                    Public = x.Public
+                })
+                .ToListAsync();
+
+            return myPosts;
         }
 
         public async Task UpdateAsync(PostViewModel newPost, int postId)

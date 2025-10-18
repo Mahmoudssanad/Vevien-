@@ -12,11 +12,13 @@ namespace Blog_Website.Services
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IHttpContextAccessor _httpContext;
+        private readonly IFollowService _followService;
 
-        public ProfileService(UserManager<ApplicationUser> userManager, IHttpContextAccessor httpContext)
+        public ProfileService(UserManager<ApplicationUser> userManager, IHttpContextAccessor httpContext, IFollowService followService)
         {
             _userManager = userManager;
             _httpContext = httpContext;
+            _followService = followService;
         }
         public async Task DeleteAsync(string userId)
         {
@@ -27,7 +29,13 @@ namespace Blog_Website.Services
         {
             var currentUserId = _httpContext.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var allUsers = await _userManager.Users.Where(x => x.Id != currentUserId).ToListAsync();
+            var followings = await _followService.GetFollowersAsync(currentUserId);
+
+            var followingsUserId = followings.Select(x => x.Id);
+
+            var allUsers = await _userManager.Users
+                .Where(x => x.Id != currentUserId && !followingsUserId.Contains(x.Id))
+                .ToListAsync();
 
             return allUsers.Select(u => new ProfileViewModel
             {

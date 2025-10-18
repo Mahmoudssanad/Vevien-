@@ -37,10 +37,30 @@
                             @if (User.Identity.IsAuthenticated && Model.IsOwner)
                             {
                                 <a asp-action="Edit" asp-controller="Profile" asp-route-userId="@Model.UserId"
-                                   class="btn btn-outline-primary btn-sm">Edit profile </a>
+                                class="btn btn-outline-primary btn-sm">Edit profile </a>
                             }
-                            
-                            @* <button class="btn btn-outline-secondary btn-sm">Message</button> *@
+                            else
+                            {
+                                <div id="follow-section" class="text-center mt-3">
+                                    @if (Model.IsFollow)
+                                    {
+                                        <button id="unfollow-btn"
+                                                data-user-id="@Model.UserId"
+                                                class="btn btn-outline-danger px-4">
+                                            Unfollow
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button id="follow-btn"
+                                                data-user-id="@Model.UserId"
+                                                class="btn btn-primary px-4">
+                                            Follow
+                                        </button>
+                                    }
+                                </div>
+                            }
+
                         </div>
                     </div>
 
@@ -52,29 +72,107 @@
                             <h6 class="fw-bold mb-0">45</h6>
                             <small class="text-muted">Posts</small>
                         </div>
-                        <div>
-                            <h6 class="fw-bold mb-0">230</h6>
-                            <small class="text-muted">Followers</small>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-0">180</h6>
-                            <small class="text-muted">Following</small>
-                        </div>
+                        
+                        <a asp-action="GetFollowers" asp-controller="Follow" asp-route-userId="@Model.UserId">
+                            <div>
+                                <h6 class="fw-bold mb-0">@Model.CountFollowers</h6>
+                                <small class="text-muted">Following</small>
+                            </div>
+                        </a>
+                        <a asp-action="GetFollowing" asp-controller="Follow" asp-route-userId="@Model.UserId">
+                            <div>
+                                <h6 class="fw-bold mb-0">@Model.CountFollowing</h6>
+                                <small class="text-muted">Followers</small>
+                            </div>
+                        </a>
+                        
                     </div>
 
                     <!-- Gallery -->
-                    @* <div class="row g-2"> *@
-                    @*     @for (int i = 1; i <= 9; i++) *@
-                    @*     { *@
-                    @*         <div class="col-4"> *@
-                    @*             <img src="/images/sample@(i).jpg" *@
-                    @*                  class="img-fluid rounded" *@
-                    @*                  style="object-fit: cover; aspect-ratio: 1 / 1;"> *@
-                    @*         </div> *@
-                    @*     } *@
-                    @* </div> *@
+                    <div class="row g-3">
+                        @foreach (var post in Model.Posts)
+                        {
+                            @if (!string.IsNullOrEmpty(post.ImageUrl))
+                            {
+                                <!-- Post with Image -->
+                                <div class="col-4">
+                                    <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.Id">
+                                        <img src="@post.ImageUrl"
+                                             class="img-fluid rounded"
+                                             style="object-fit: cover; aspect-ratio: 1 / 1;" />
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- Text-only Post -->
+                                <div class="col-12">
+                                    <div class="card shadow-sm border-0 rounded-3">
+                                        <div class="card-body">
+                                            <p class="mb-2">@post.Content</p>
+                                            <div class="text-muted small d-flex justify-content-between">
+                                                @* <span>@post..ToLocalTime().ToString("MMM dd, yyyy")</span> *@
+                                                <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id">View Post</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // Follow
+            $(document).on('click', '#follow-btn', function () {
+                const targetUserId = $(this).data('user-id');
+
+                $.ajax({
+                    url: '/Follow/AddFollow',
+                    type: 'POST',
+                    data: { targetUserId: targetUserId },
+                    success: function () {
+                        $('#follow-section').html(`
+                            <button id="unfollow-btn" data-user-id="${targetUserId}" class="btn btn-outline-danger px-4">
+                                Unfollow
+                            </button>
+                        `);
+                    },
+                    error: function () {
+                        alert('Something went wrong while trying to follow user.');
+                    }
+                });
+            });
+
+            // Unfollow
+            $(document).on('click', '#unfollow-btn', function () {
+                const targetUserId = $(this).data('user-id');
+
+                $.ajax({
+                    url: '/Follow/DeleteFollow',
+                    type: 'POST',
+                    data: { targetUserId: targetUserId },
+                    success: function () {
+                        $('#follow-section').html(`
+                            <button id="follow-btn" data-user-id="${targetUserId}" class="btn btn-primary px-4">
+                                Follow
+                            </button>
+                        `);
+                    },
+                    error: function () {
+                        alert('Something went wrong while trying to unfollow user.');
+                    }
+                });
+            });
+
+        });
+    </script>
+}

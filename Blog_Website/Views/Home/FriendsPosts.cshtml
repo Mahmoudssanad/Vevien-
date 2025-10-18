@@ -16,8 +16,8 @@
                 <div class="card-header bg-white border-0 d-flex align-items-center">
                     <a href="/Profile/Profile?userId=@post.UserId">
                         <img src="@(string.IsNullOrEmpty(post.ApplicationUser?.ImageURL)
-                             ? Url.Content("~/images/profile/default.png")
-                             : Url.Content(post.ApplicationUser.ImageURL))"
+                            ? Url.Content("~/images/profile/default.png")
+                            : Url.Content(post.ApplicationUser.ImageURL))"
                              class="rounded-circle me-2"
                              style="width: 40px; height: 40px; object-fit: cover;" />
 
@@ -40,7 +40,7 @@
                             </ul>
                         </div>
                     }
-                    
+
                 </div>
 
                 <!-- Post Image -->
@@ -59,7 +59,7 @@
                     @if (!string.IsNullOrWhiteSpace(post.Content))
                     {
                         @* <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.Id"> *@
-                            <p class="card-text">@post.Content</p>
+                        <p class="card-text">@post.Content</p>
                         @* </a> *@
                     }
 

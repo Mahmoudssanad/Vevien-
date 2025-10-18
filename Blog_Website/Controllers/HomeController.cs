@@ -18,12 +18,21 @@ namespace Blog_Website.Controllers
             _postService = postService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> FriendsPosts()
         {
             var allPublicPosts = await _postService.GetPublicPosts();
 
             return View(allPublicPosts);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var friendsPosts = await _postService.GetFriendsPosts();
+
+            return View(friendsPosts);
+        }
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

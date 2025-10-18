@@ -9,7 +9,8 @@ namespace Blog_Website.Services.IServices
         Task UpdateAsync(PostViewModel newPost, int postId);
         Task DeleteAsync(int postId);
         Task<Post> GetByIdAsync(int postId);
-        Task<List<Post>> GetAllUserPostsAsync(string userId);
+        Task<List<PostViewModel>> GetAllUserPostsAsync(string userId);
+        Task<List<PostViewModel>> MyPosts(string userId);
         Task<List<Post>> GetPublicPosts();
         Task<List<Post>> GetFriendsPosts();
     }
