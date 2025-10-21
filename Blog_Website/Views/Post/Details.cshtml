@@ -7,6 +7,28 @@
     ViewData["Title"] = "Post Details";
 }
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0myeS8K/Np9nAZ8L6mGZPR3U9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+@* like modal to show user who liked the post *@
+<div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="likesModalLabel">Liked by</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="likesList" class="list-group">
+                    <!-- Users will be injected here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container py-5 d-flex justify-content-center">
     <div class="card shadow-sm border-0 rounded-4" style="max-width: 600px; width: 100%;">
 
@@ -56,22 +78,37 @@
             }
         </div>
 
+        <!-- زر لفتح المودال -->
+        <button class="btn btn-link p-0 open-likes-modal"
+                data-post-id="@Model.Id"
+                data-bs-toggle="modal"
+                data-bs-target="#likesModal">
+            @Model.TempLikesCount Likes
+        </button>
+
         <!-- 🔹 Post Actions -->
         <div class="card-body pt-2">
             <div class="d-flex align-items-center mb-2">
-                <!-- Like Button -->
-                <form asp-action="ToggleLike" asp-controller="Post" asp-route-postId="@Model.Id" method="post" class="me-3">
-                    <button type="submit" class="btn btn-link p-0 border-0">
-                        <i class="bi bi-heart fs-4 text-danger"></i>
-                    </button>
-                </form>
 
-                <!-- Like Count -->
-                <span class="fw-semibold">@Model.Likes?.Count() ?? 0</span>
+                <button class="btn btn-light btn-sm me-3 like-btn"
+                        data-target-id="@Model.Id"
+                        data-target-type="Post">
+                    @if (Model.TempLikesCount > 0)
+                    {
+                        <i class="@(Model.IsLikedByCurrentUser
+                                ? "fa-solid fa-heart text-danger"
+                                : "fa-regular fa-heart")"></i>
+                    }
+                    else
+                    {
+                        <i class="fa-regular fa-heart"></i>
+                    }
+                    <span class="like-text">Like</span>
+                    <span class="like-count">@Model.TempLikesCount</span>
+                </button>
             </div>
-
-            
         </div>
+
 
         <hr class="my-1">
 
@@ -117,5 +154,101 @@
     </div>
 </div>
 
-<!-- Bootstrap icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $(document).on("click", ".like-btn", function (e) {
+                e.preventDefault();
+
+                const button = $(this);
+                const targetId = button.data("target-id");
+                const targetType = button.data("target-type");
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Like/Toggle",
+                    data: {
+                        TargetId: targetId,
+                        TargetType: targetType
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            console.log("✅ AJAX Response:", response);
+
+                            const icon = button.find("i");
+                            const count = button.find(".like-count");
+
+                            // تغيير الأيقونة حسب الحالة
+                            if (response.liked) {
+                                icon.removeClass("fa-regular").addClass("fa-solid text-danger");
+                            } else {
+                                icon.removeClass("fa-solid text-danger").addClass("fa-regular");
+                            }
+
+                            // تحديث العدد
+                            count.text(response.count);
+                        } else {
+                            console.warn("⚠️ Server returned success=false");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("❌ AJAX Error:", error);
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+
+            // لما المستخدم يضغط على زر "X Likes"
+            $(document).on("click", ".open-likes-modal", function () {
+
+                const postId = $(this).data("post-id");
+                const likesList = $("#likesList");
+
+                // نفضي المودال قبل ما نحمّل الداتا الجديدة
+                likesList.empty();
+
+                $.ajax({
+                    type: "GET",
+                    url: `/Like/GetPostLikes?postId=${postId}`,
+                    success: function (users) {
+                        if (users.length === 0) {
+                            likesList.append(`<li class="list-group-item text-muted">No likes yet.</li>`);
+                            return;
+                        }
+
+                        // نضيف كل المستخدمين جوه الليست
+                               users.forEach(user => {
+                            const profilePic = user.imageURL
+                                ? `<img src="${user.imageURL}" class="rounded-circle me-2" width="35" height="35">`
+                                : `<i class="fa-regular fa-user me-2 fa-lg"></i>`;
+
+                            likesList.append(`
+                                <li class="list-group-item d-flex align-items-center">
+                                    <a href="/Profile/Profile?userId=${user.id}"
+                                       class="text-decoration-none text-dark d-flex align-items-center w-100">
+                                        ${profilePic}
+                                        <span>${user.userName}</span>
+                                    </a>
+                                </li>
+                            `);
+                        });
+
+                    },
+                    error: function (xhr, status, error) {
+                        likesList.append(`<li class="list-group-item text-danger">Error loading likes.</li>`);
+                        console.error("❌ AJAX Error:", error);
+                    }
+                });
+            });
+
+        });
+    </script>
+
+}
+

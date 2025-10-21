@@ -101,7 +101,14 @@ namespace Blog_Website.Controllers
             return View(post);
         }
 
-        
+        [HttpGet]
+        public async Task<IActionResult> MyPosts(string userId)
+        {
+
+            var myPosts = await _postService.MyPosts(userId);
+
+            return View(myPosts);
+        }
 
     }
 }

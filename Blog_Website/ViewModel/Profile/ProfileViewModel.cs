@@ -25,5 +25,7 @@ namespace Blog_Website.ViewModel.Profile
 
         public ApplicationUser User {  get; set; }
 
+        public int PostsCount { get; set; }
+
     }
 }

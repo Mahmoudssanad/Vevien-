@@ -65,7 +65,7 @@ namespace Blog_Website.Services
                 existing.Code = otp.Code;
                 existing.ExpiryTime = otp.ExpiryTime;
                 existing.IsUsed = false;
-
+                existing.Email = otp.Email;
                 _context.OTPs.Update(existing);
             }
             else
@@ -89,7 +89,6 @@ namespace Blog_Website.Services
         public async Task<OTP> FindByEmailAsync(string email)
         {
             var otp = await _context.OTPs.FirstOrDefaultAsync(x => x.Email == email);
-            if (otp == null) ;
 
             return otp;
         }

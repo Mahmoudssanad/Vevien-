@@ -175,27 +175,20 @@ namespace Blog_Website.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CommentId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PostId")
+                    b.Property<int>("TargetId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Type")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("TargetType")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CommentId");
-
-                    b.HasIndex("PostId");
 
                     b.HasIndex("UserId");
 
@@ -500,18 +493,6 @@ namespace Blog_Website.Migrations
 
             modelBuilder.Entity("Blog_Website.Models.Entities.Like", b =>
                 {
-                    b.HasOne("Blog_Website.Models.Entities.Comment", "Comment")
-                        .WithMany("Likes")
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Blog_Website.Models.Entities.Post", "Post")
-                        .WithMany("Likes")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Blog_Website.Models.Entities.ApplicationUser", "ApplicationUser")
                         .WithMany("Likes")
                         .HasForeignKey("UserId")
@@ -519,10 +500,6 @@ namespace Blog_Website.Migrations
                         .IsRequired();
 
                     b.Navigation("ApplicationUser");
-
-                    b.Navigation("Comment");
-
-                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Blog_Website.Models.Entities.Notification", b =>
@@ -645,8 +622,6 @@ namespace Blog_Website.Migrations
 
             modelBuilder.Entity("Blog_Website.Models.Entities.Comment", b =>
                 {
-                    b.Navigation("Likes");
-
                     b.Navigation("Notification")
                         .IsRequired();
                 });
@@ -666,8 +641,6 @@ namespace Blog_Website.Migrations
             modelBuilder.Entity("Blog_Website.Models.Entities.Post", b =>
                 {
                     b.Navigation("Comments");
-
-                    b.Navigation("Likes");
                 });
 #pragma warning restore 612, 618
         }

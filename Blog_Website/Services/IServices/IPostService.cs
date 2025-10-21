@@ -13,5 +13,9 @@ namespace Blog_Website.Services.IServices
         Task<List<PostViewModel>> MyPosts(string userId);
         Task<List<Post>> GetPublicPosts();
         Task<List<Post>> GetFriendsPosts();
+
+        Task<int> VisiblePostsCount(string userId);
+        Task<int> MyPostsCount(string userId);
+
     }
 }

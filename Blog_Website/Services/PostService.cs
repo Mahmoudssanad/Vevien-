@@ -105,6 +105,11 @@ namespace Blog_Website.Services
                     .Include(x => x.ApplicationUser)
                     .FirstOrDefaultAsync(x => x.Id == postId);
 
+            // Include Likes Implicitly
+            post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId == post.Id);
+            post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+
             return post;
         }
 
@@ -123,6 +128,14 @@ namespace Blog_Website.Services
                 .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
 
+            // Include Likes Implicitly
+            foreach(var post in allFriendsPosts)
+            {
+                post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId == post.Id);
+                post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            }
+
             return allFriendsPosts;
         }
 
@@ -134,7 +147,15 @@ namespace Blog_Website.Services
                 .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
 
+            // Include Likes Implicitly
+            foreach (var post in allpublicPosts)
+            {
+                post.TempLikesCount = await _context.Likes.CountAsync(l => l.TargetId == post.Id);
+                post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            }
+
             return allpublicPosts;
+
         }
 
         public async Task<List<PostViewModel>> MyPosts(string userId)
@@ -147,9 +168,16 @@ namespace Blog_Website.Services
                     Visible = x.Visible,
                     Content = x.Content,
                     ImageUrl = x.ImageUrl,
-                    Public = x.Public
+                    Public = x.Public,
+                    UserId = x.UserId
                 })
                 .ToListAsync();
+
+            foreach (var post in myPosts)
+            {
+                post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId ==  post.Id);
+            }
 
             return myPosts;
         }
@@ -190,6 +218,20 @@ namespace Blog_Website.Services
 
             _context.Posts.Update(post);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> VisiblePostsCount(string userId)
+        {
+            var visiblePostsCount = await _context.Posts.CountAsync(x => x.UserId == userId && x.Visible);
+
+            return visiblePostsCount;
+        }
+
+        public async Task<int> MyPostsCount(string userId)
+        {
+            var visiblePostsCount = await _context.Posts.CountAsync(x => x.UserId == userId);
+
+            return visiblePostsCount;
         }
     }
 }

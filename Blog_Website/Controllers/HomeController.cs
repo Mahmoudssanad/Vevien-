@@ -18,7 +18,8 @@ namespace Blog_Website.Controllers
             _postService = postService;
         }
 
-        public async Task<IActionResult> FriendsPosts()
+        [HttpGet]
+        public async Task<IActionResult> Index()
         {
             var allPublicPosts = await _postService.GetPublicPosts();
 
@@ -26,7 +27,7 @@ namespace Blog_Website.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> FriendsPosts()
         {
             var friendsPosts = await _postService.GetFriendsPosts();
 

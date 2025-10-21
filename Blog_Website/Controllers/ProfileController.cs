@@ -42,10 +42,13 @@ namespace Blog_Website.Controllers
 
             var userPosts = await _postService.GetAllUserPostsAsync(userId);
 
+            var postsCount = await _postService.VisiblePostsCount(userId);
+
             if (userId == User.FindFirstValue(ClaimTypes.NameIdentifier))
             {
                 flag = true;
                 userPosts = await _postService.MyPosts(userId);
+                postsCount = await _postService.MyPostsCount(userId);
             }
 
             if (user == null)
@@ -57,6 +60,7 @@ namespace Blog_Website.Controllers
 
             var followersCount = await _followService.FollowersCountAsync(userId);
             var followingsCount = await _followService.FollowingCountAsync(userId);
+
 
             var userProfile = new ProfileViewModel
                 {
@@ -70,7 +74,8 @@ namespace Blog_Website.Controllers
                     IsFollow = isFollow,
                     CountFollowers = followersCount,
                     CountFollowing = followingsCount,
-                    User = user
+                    User = user,
+                    PostsCount = postsCount
                 };
 
 

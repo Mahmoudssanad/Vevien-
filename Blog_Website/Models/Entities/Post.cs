@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Blog_Website.Models.Entities
@@ -21,11 +22,18 @@ namespace Blog_Website.Models.Entities
 
         public DateTime UpdateDate { get; set; }
 
+        [NotMapped]
+        public int? TempLikesCount { get; set; }
+
+        [NotMapped]
+        public bool IsLikedByCurrentUser { get; set; }
+
         [ForeignKey("ApplicationUser")]
         public string UserId {  get; set; }
         public ApplicationUser ApplicationUser {  get; set; }
 
-        public ICollection<Like> Likes {  get; set; }
+        [NotMapped]
+        public ICollection<Like> Likes { get; set; } = new List<Like>();
         public ICollection<Comment> Comments {  get; set; }
     }
 }

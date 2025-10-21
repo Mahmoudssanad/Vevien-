@@ -49,6 +49,8 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IFollowService, FollowService>();
+builder.Services.AddScoped<ILikeService, LikeService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 
 var app = builder.Build();

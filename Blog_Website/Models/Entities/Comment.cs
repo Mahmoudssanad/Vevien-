@@ -21,7 +21,8 @@ namespace Blog_Website.Models.Entities
         public int PostId { get; set; }
         public Post Post { get; set; }
 
-        public ICollection<Like> Likes { get; set; }
+        [NotMapped]
+        public ICollection<Like> Likes { get; set; } = new List<Like>();
         public Notification Notification { get; set; }
     }
 }

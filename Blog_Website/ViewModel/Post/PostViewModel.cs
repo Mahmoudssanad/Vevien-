@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NuGet.Protocol.Core.Types;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Blog_Website.ViewModel.Post
 {
     public class PostViewModel
     {
         public int Id { get; set; }
+        public string? UserId { get; set; }
 
         public IFormFile? ImageFile { get; set; }
 
@@ -20,5 +22,11 @@ namespace Blog_Website.ViewModel.Post
 
         [HiddenInput]
         public string? ImageUrl { get; set; }
+
+        [HiddenInput]
+        public int? TempLikesCount { get; set; }
+
+        [HiddenInput]
+        public bool IsLikedByCurrentUser { get; set; }
     }
 }
