@@ -35,22 +35,26 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
         <!-- 🔹 Header -->
         <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <img src="@(string.IsNullOrEmpty(Model.ApplicationUser?.ImageURL)
-                    ? Url.Content("~/images/profile/default.png")
-                    : Url.Content(Model.ApplicationUser.ImageURL))"
-                     class="rounded-circle me-2"
-                     style="width: 40px; height: 40px; object-fit: cover;" />
-
+                <a asp-action="Profile" asp-controller="Profile" asp-route-userId="@Model.UserId">
+                    <img src="@(string.IsNullOrEmpty(Model.ApplicationUser?.ImageURL)
+                        ? Url.Content("~/images/profile/default.png")
+                        : Url.Content(Model.ApplicationUser.ImageURL))"
+                    class="rounded-circle me-2"
+                    style="width: 40px; height: 40px; object-fit: cover;" />
+                </a>
                 <div>
-                    <h6 class="fw-bold mb-0">@Model.ApplicationUser?.UserName</h6>
-                    <small class="text-muted">@TimeFormatter.ToInstagramStyle(Model.CreatedDate)</small>
+                    <a href="/Profile/Profile?userId=@Model.UserId"
+                       class="fw-semibold text-decoration-none text-dark">
+                        <h6 class="fw-bold mb-0">@Model.ApplicationUser?.UserName</h6>
+                        <small class="text-muted">@TimeFormatter.ToInstagramStyle(Model.CreatedDate)</small>
+                    </a>
                 </div>
             </div>
             @if (Model.UserId == User.FindFirst(ClaimTypes.NameIdentifier).Value)
             {
                 <div class="dropdown">
                     <button class="btn btn-light border-0" data-bs-toggle="dropdown">
-                        
+
                         <i class="bi bi-three-dots"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
@@ -65,9 +69,9 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
         @if (!string.IsNullOrEmpty(Model.ImageUrl))
         {
             <img src="@Model.ImageUrl"
-                 alt="Post Image"
-                 class="img-fluid"
-                 style="width: 100%; object-fit: cover; max-height: 500px;">
+            alt="Post Image"
+            class="img-fluid"
+            style="width: 100%; object-fit: cover; max-height: 500px;">
         }
 
         <!-- 🔹 Post Content -->
@@ -80,24 +84,29 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
 
         <!-- زر لفتح المودال -->
         <button class="btn btn-link p-0 open-likes-modal"
-                data-post-id="@Model.Id"
-                data-bs-toggle="modal"
-                data-bs-target="#likesModal">
+        data-post-id="@Model.Id"
+        data-bs-toggle="modal"
+        data-bs-target="#likesModal">
             @Model.TempLikesCount Likes
         </button>
 
-        <!-- 🔹 Post Actions -->
+        <!-- 🔹 Like Actions -->
         <div class="card-body pt-2">
             <div class="d-flex align-items-center mb-2">
 
                 <button class="btn btn-light btn-sm me-3 like-btn"
-                        data-target-id="@Model.Id"
-                        data-target-type="Post">
+                data-target-id="@Model.Id"
+                data-target-type="Post">
                     @if (Model.TempLikesCount > 0)
                     {
-                        <i class="@(Model.IsLikedByCurrentUser
-                                ? "fa-solid fa-heart text-danger"
-                                : "fa-regular fa-heart")"></i>
+                        @if (Model.IsLikedByCurrentUser)
+                        {
+                            <i class="fa-solid fa-heart text-danger"></i>
+                        }
+                        else
+                        {
+                            <i class="fa-regular fa-heart"></i>
+                        }
                     }
                     else
                     {
@@ -113,23 +122,15 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
         <hr class="my-1">
 
         <!-- 🔹 Comments Section -->
-        <div class="card-body pt-2">
+        @* <div class="card-body pt-2"> *@
+        <div class="comments-container" id="post-@Model.Id">
             <h6 class="fw-bold mb-3">Comments</h6>
 
             @if (Model.Comments != null && Model.Comments.Any())
             {
                 @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedDate))
                 {
-                    <div class="d-flex mb-3">
-                        <img src="@(comment.ApplicationUser?.ImageURL ?? "/images/default-profile.png")"
-                             class="rounded-circle me-2"
-                             style="width: 35px; height: 35px; object-fit: cover;">
-                        <div class="bg-light rounded-4 px-3 py-2" style="flex: 1;">
-                            <strong>@comment.ApplicationUser?.UserName</strong>
-                            <p class="mb-1">@comment.Content</p>
-                            <small class="text-muted">@comment.CreatedDate.ToString("MMM dd, yyyy • hh:mm tt")</small>
-                        </div>
-                    </div>
+                    @await Html.PartialAsync("_CommentPartial", comment)
                 }
             }
             else
@@ -138,9 +139,10 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
             }
 
             <!-- 🔹 Add Comment -->
-            <form asp-action="AddComment" asp-controller="Post" asp-route-postId="@Model.Id" method="post" class="mt-3">
+            <form id="commentForm" class="mt-3">
+                <input type="hidden" name="PostId" value="@Model.Id" />
                 <div class="input-group">
-                    <input type="text" name="commentText" class="form-control rounded-start-pill" placeholder="Add a comment..." required>
+                    <input type="text" name="Content" class="form-control rounded-start-pill" placeholder="Add a comment..." required />
                     <button type="submit" class="btn btn-primary rounded-end-pill">Post</button>
                 </div>
             </form>
@@ -157,6 +159,7 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
 
 
 @section Scripts {
+    @* Like *@
     <script>
         $(document).ready(function () {
             $(document).on("click", ".like-btn", function (e) {
@@ -201,6 +204,7 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
         });
     </script>
 
+    @* Modal *@
     <script>
         $(document).ready(function () {
 
@@ -250,5 +254,29 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
         });
     </script>
 
+    <script>
+        // ✅ AJAX for adding comments dynamically
+        $(document).on("submit", "#commentForm", function (e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const formData = new FormData(form[0]);
+
+            $.ajax({
+                type: "POST",
+                url: "/Comment/AddComment",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (partialHtml) {
+                    $("#commentsContainer").prepend(partialHtml);
+                    form[0].reset();
+                },
+                error: function (xhr, status, error) {
+                    console.error("❌ Add comment failed:", error);
+                }
+            });
+        });
+    </script>
 }
 

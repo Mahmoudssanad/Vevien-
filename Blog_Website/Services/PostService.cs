@@ -1,12 +1,9 @@
 ﻿using Blog_Website.Models.Data;
 using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
+using Blog_Website.ViewModel.Notification;
 using Blog_Website.ViewModel.Post;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.InteropServices;
 using System.Security.Claims;
 
 namespace Blog_Website.Services
@@ -17,13 +14,15 @@ namespace Blog_Website.Services
         private readonly IHttpContextAccessor _http;
         private readonly IWebHostEnvironment _webHost;
         private readonly IFollowService _followService;
+        private readonly INotificationService _notifiService;
 
-        public PostService(AppDbContext context, IHttpContextAccessor http, IWebHostEnvironment webHost, IFollowService followService)
+        public PostService(AppDbContext context, IHttpContextAccessor http, IWebHostEnvironment webHost, IFollowService followService, INotificationService notifiService)
         {
             _context = context;
             _http = http;
             _webHost = webHost;
             _followService = followService;
+            _notifiService = notifiService;
         }
 
         public async Task AddAsync(PostViewModel model)
@@ -64,10 +63,33 @@ namespace Blog_Website.Services
                     CreatedDate = DateTime.UtcNow,
                     ImageUrl = postPath,
                 };
+
                 await _context.Posts.AddAsync(newPost);
                 await _context.SaveChangesAsync();
+
+                var followers = await _followService.GetFollowingsAsync(userId);
+                var user = await _context.Users.FindAsync(userId);
+
+                var redirectUrl = $"/Post/Details?postId={newPost.Id}";
+
+
+                foreach (var follower in followers)
+                {
+                    var notification = new AddNotificationViewModel
+                    {
+                        SenderId = userId,
+                        ReceiverId = follower.Id,
+                        Type = "Post",
+                        Title = "New Post",
+                        Description = $"{user!.UserName} Add New Post",
+                        RedirectUrl = redirectUrl
+                    };
+                    if (!string.IsNullOrEmpty(follower.Id))
+                        await _notifiService.CreateAsync(notification);
+                }
             }
-            Console.WriteLine("Something invalid");
+            else
+                Console.WriteLine("Something invalid");
         }
 
         public async Task DeleteAsync(int postId)
@@ -102,16 +124,22 @@ namespace Blog_Website.Services
         public async Task<Post> GetByIdAsync(int postId)
         {
             var post = await _context.Posts
-                    .Include(x => x.ApplicationUser)
-                    .FirstOrDefaultAsync(x => x.Id == postId);
+                .Include(x => x.ApplicationUser)
+                .Include(x => x.Comments)
+                .ThenInclude(x => x.ApplicationUser)
+                .FirstOrDefaultAsync(x => x.Id == postId);
 
-            // Include Likes Implicitly
+            if (post == null)
+                return null!;
+
+            var userId = _http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId == post.Id);
-            post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-
+            post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.TargetId == post.Id && x.UserId == userId);
 
             return post;
         }
+
 
         public async Task<List<Post>> GetFriendsPosts()
         {
@@ -132,7 +160,8 @@ namespace Blog_Website.Services
             foreach(var post in allFriendsPosts)
             {
                 post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId == post.Id);
-                post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                post.IsLikedByCurrentUser = await _context.Likes
+                    .AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) && x.TargetId == post.Id);
 
             }
 
@@ -151,7 +180,8 @@ namespace Blog_Website.Services
             foreach (var post in allpublicPosts)
             {
                 post.TempLikesCount = await _context.Likes.CountAsync(l => l.TargetId == post.Id);
-                post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                post.IsLikedByCurrentUser = await _context.Likes
+                    .AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) && x.TargetId == post.Id);
             }
 
             return allpublicPosts;
@@ -175,7 +205,8 @@ namespace Blog_Website.Services
 
             foreach (var post in myPosts)
             {
-                post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                post.IsLikedByCurrentUser = await _context.Likes
+                    .AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) && x.TargetId == post.Id);
                 post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId ==  post.Id);
             }
 

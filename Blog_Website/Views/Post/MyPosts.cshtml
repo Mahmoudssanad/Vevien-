@@ -44,7 +44,7 @@
                         <img src="@post.ImageUrl"
                         alt="Post image"
                         class="card-img-top rounded-top"
-                        style="object-fit: cover; width: 100%; height: 300px;" />
+                             style="object-fit: cover;  width: 50%; height: 100%;" />
                     }
 
                     <!-- زر لفتح المودال -->
@@ -65,16 +65,21 @@
                             data-target-type="Post">
                                 @if (post.TempLikesCount > 0)
                                 {
-                                    <i class="@(post.IsLikedByCurrentUser
-                                ? "fa-solid fa-heart text-danger"
-                                : "fa-regular fa-heart")"></i>
+                                    @if (post.IsLikedByCurrentUser)
+                                    {
+                                        <i class="fa-solid fa-heart text-danger"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-regular fa-heart"></i>
+                                    }
                                 }
                                 else
                                 {
                                     <i class="fa-regular fa-heart"></i>
                                 }
 
-                                <span class="like-text">Like</span>
+                                    <span class="like-text">Like</span>
                                 <span class="like-count">@post.TempLikesCount</span>
                             </button>
 
@@ -95,7 +100,7 @@
                             <img src="@post.ImageUrl"
                                  alt="Post image"
                                  class="card-img-top rounded-top"
-                                 style="object-fit: cover; width: 10%; height: 30px;" />
+                                 style="object-fit: cover; width: 50%; height: 100%;" />
                         }
 
                         <!-- زر لفتح المودال -->
@@ -129,11 +134,7 @@
                                     <span class="like-count">@post.TempLikesCount</span>
                                 </button>
 
-                                <!-- زر التعليق (مستقبلاً AJAX Comments) -->
-                                <button class="btn btn-light btn-sm comment-btn">
-                                    <i class="fa-regular fa-comment"></i>
-                                    <span>Comment</span>
-                                </button>
+                                
                             </div>
                         </div>
                     }
@@ -148,6 +149,7 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/all.min.js" crossorigin="anonymous"></script>
 
+    @* Like *@
     <script>
         $(document).ready(function () {
             $(document).on("click", ".like-btn", function (e) {
@@ -192,6 +194,7 @@
         });
     </script>
 
+    @* Modal *@
     <script>
         $(document).ready(function () {
 

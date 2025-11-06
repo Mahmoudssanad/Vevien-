@@ -22,7 +22,7 @@ namespace Blog_Website.Services
         {
             // IConfiguration عن طريق ال appsettings.json اللي في ملف MailSettings section بقراء البيانات اللي موجود في 
             var host = _config["MailSettings:Host"];
-            var port = int.Parse(_config["MailSettings:Port"]);
+            var port = int.Parse(_config["MailSettings:Port"]!);
             var displayName = _config["MailSettings:DisplayName"];
             var username = _config["MailSettings:Email"];
             var password = _config["MailSettings:Password"];

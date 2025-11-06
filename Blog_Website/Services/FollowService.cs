@@ -1,6 +1,7 @@
 ﻿using Blog_Website.Models.Data;
 using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
+using Blog_Website.ViewModel.Notification;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -9,18 +10,21 @@ namespace Blog_Website.Services
     public class FollowService : IFollowService
     {
         private readonly AppDbContext _context;
-        private readonly IHttpContextAccessor _httpContext;
+        private readonly INotificationService _notificationService;
 
-        public FollowService(AppDbContext context, IHttpContextAccessor httpContext)
+        public FollowService(AppDbContext context, INotificationService notificationService)
         {
             _context = context;
-            _httpContext = httpContext;
+            _notificationService = notificationService;
         }
         public async Task FollowAsync(string followerId, string followingId)
         {
             if (followerId == followingId) return;
 
-            var exists = await _context.Follows.AnyAsync(x => x.FollowerId == followerId && x.FollowingId == followingId);
+            var exists = await _context.Follows
+                .Include(x => x.Following)
+                .Include(x => x.Follower)
+                .AnyAsync(x => x.FollowerId == followerId && x.FollowingId == followingId);
 
             if (exists) return;
 
@@ -34,8 +38,22 @@ namespace Blog_Website.Services
             {
                 await _context.Follows.AddAsync(newFollow);
                 await _context.SaveChangesAsync();
+
+                var redirectUrl = $"/Profile/Profile?userId={followingId}";
+
+                var notification = new AddNotificationViewModel
+                {
+                    SenderId = followingId,
+                    ReceiverId = followerId,
+                    Description = $"Start following you",
+                    Title = $"New Follow for you from...",
+                    Type = "Follow",
+                    RedirectUrl = redirectUrl
+                };
+
+                await _notificationService.CreateAsync(notification);
             }
-            catch (Exception exception)
+            catch
             {
                 throw new Exception("error when add follow in database");
             }

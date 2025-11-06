@@ -1,7 +1,7 @@
 ﻿using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
+using Blog_Website.ViewModel.Notification;
 using Blog_Website.ViewModel.Post;
-using Blog_Website.ViewModel.Profile;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -38,9 +38,10 @@ namespace Blog_Website.Controllers
                 {
                     await _postService.AddAsync(model);
 
+
                     return RedirectToAction("Index", "Home");
                 }
-                catch(Exception ex)
+                catch
                 {
                     ModelState.AddModelError("", "Can not share empty post");
                 }

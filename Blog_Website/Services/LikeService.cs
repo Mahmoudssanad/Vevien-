@@ -2,7 +2,7 @@
 using Blog_Website.Models.Data;
 using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
-using Blog_Website.ViewModel.Like;
+using Blog_Website.ViewModel.Notification;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog_Website.Services
@@ -10,10 +10,12 @@ namespace Blog_Website.Services
     public class LikeService : ILikeService
     {
         private readonly AppDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public LikeService(AppDbContext context)
+        public LikeService(AppDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<List<ApplicationUser>> GetAllLikesAsync(int targetId, LikeTargetType targetType)
@@ -54,6 +56,43 @@ namespace Blog_Website.Services
             await _context.Likes.AddAsync(newLike);
             await _context.SaveChangesAsync();
 
+            string? receiverId = null;
+            string redirectUrl = "";
+
+            if (targetType == LikeTargetType.Like)
+            {
+                var post = await _context.Posts
+                .Include(p => p.ApplicationUser) // علشان نجيب صاحب البوست
+                .FirstOrDefaultAsync(p => p.Id == targetId);
+
+                if (post != null)
+                {
+                    receiverId = post.UserId;
+                    redirectUrl = $"/Post/Details?postId={post.Id}";
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            // ✅ الخطوة 2: نمنع إرسال إشعار لنفس الشخص اللي عمل لايك لمنشوره
+            if (receiverId == userId || receiverId == null)
+                return true;
+
+            var notification = new AddNotificationViewModel
+            {
+                SenderId = userId,
+                ReceiverId = receiverId,
+                Title = "New Like",
+                Description = $"{userId} add new like for your post",
+                RedirectUrl = redirectUrl,
+                Type = "Like",
+                TargetId = targetId
+            };
+
+            await _notificationService.CreateAsync(notification);
+
             return true;
         }
 
@@ -76,6 +115,15 @@ namespace Blog_Website.Services
 
             _context.Likes.Remove(existingLike);
             await _context.SaveChangesAsync();
+
+            var notification = await _context.Notifications.FirstOrDefaultAsync(x => x.TargetId == targetId && x.SenderId == userId && x.Type == "Like");
+
+            if (notification != null)
+            {
+                _context.Notifications.Remove(notification);
+                await _context.SaveChangesAsync();
+            }
+
             return true;
         }
     }

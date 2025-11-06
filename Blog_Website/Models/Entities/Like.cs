@@ -11,13 +11,11 @@ namespace Blog_Website.Models.Entities
 
 
         [ForeignKey("ApplicationUser")]
-        public string UserId { get; set; }
-        public ApplicationUser ApplicationUser { get; set; }
+        public string? UserId { get; set; }
+        public ApplicationUser? ApplicationUser { get; set; }
 
         // بدل ما نربط بـ PostId فقط، نخلي العلاقة Polymorphic
         public int TargetId { get; set; } // ممكن تكون Id البوست أو Id الكومنت
         public LikeTargetType TargetType { get; set; } // نوع الكيان اللي متعمل عليه لايك
-
-        public Notification Notification { get; set; }
     }
 }

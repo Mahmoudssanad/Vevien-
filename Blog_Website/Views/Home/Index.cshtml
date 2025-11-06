@@ -80,9 +80,10 @@
                 <div class="card-body">
                     @if (!string.IsNullOrWhiteSpace(post.Content))
                     {
-                        @* <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.Id"> *@
+                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.Id"
+                           class="fw-semibold text-decoration-none text-dark">
                         <p class="card-text">@post.Content</p>
-                        @* </a> *@
+                        </a>
                     }
 
 
@@ -117,10 +118,11 @@
                         </button>
 
                         <!-- زر التعليق -->
-                        <button class="btn btn-light btn-sm comment-btn" data-post-id="@post.Id">
+                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.Id"
+                           class="fw-semibold text-decoration-none text-dark" class="btn btn-light btn-sm comment-btn">
                             <i class="fa-regular fa-comment"></i>
                             <span>Comment</span>
-                        </button>
+                        </a>
 
                     </div>
 

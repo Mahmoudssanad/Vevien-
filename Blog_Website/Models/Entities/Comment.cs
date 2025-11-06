@@ -10,19 +10,18 @@ namespace Blog_Website.Models.Entities
 
         public string? ImageUrl { get; set; }
 
-        public DateTime CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime UpdatedDate { get; set; }
 
         [ForeignKey("ApplicationUser")]
-        public string UserId { get; set; }
-        public ApplicationUser ApplicationUser { get; set; }
+        public string? UserId { get; set; }
+        public ApplicationUser? ApplicationUser { get; set; }
 
         [ForeignKey("Post")]
         public int PostId { get; set; }
-        public Post Post { get; set; }
+        public Post? Post { get; set; }
 
         [NotMapped]
         public ICollection<Like> Likes { get; set; } = new List<Like>();
-        public Notification Notification { get; set; }
     }
 }

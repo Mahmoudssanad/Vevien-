@@ -59,7 +59,7 @@
                     </ul>
                 </div>
 
-                
+                @await Component.InvokeAsync("Notification")
 
                 <form id="logoutForm">
                     @Html.AntiForgeryToken()
@@ -74,10 +74,40 @@
         </main>
     </div>
 
+    <script src="~/microsoft-signalr/signalr.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/notificationHub")
+            .build();
+
+        connection.on("ReceiveNotification", function (title, redirectUrl) {
+            // ✅ زود العدد
+            let badge = document.querySelector("#notification-badge");
+            if (badge) {
+                let count = parseInt(badge.innerText || "0");
+                badge.innerText = count + 1;
+            }
+
+            // ✅ أضف الإشعار الجديد للقائمة
+            let list = document.querySelector("#notification-list");
+            if (list) {
+                let li = document.createElement("li");
+                li.innerHTML = `<a class="dropdown-item unread" href="${redirectUrl}">${title}</a>`;
+                list.prepend(li);
+            }
+        });
+
+        connection.start()
+            .then(() => console.log("✅ SignalR connected"))
+            .catch(err => console.error("❌ Connection error:", err));
+    </script>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    
 </body>
 </html>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">

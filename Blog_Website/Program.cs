@@ -1,3 +1,4 @@
+ï»¿using Blog_Website.Hubs;
 using Blog_Website.Models.Data;
 using Blog_Website.Models.Entities;
 using Blog_Website.Services;
@@ -5,6 +6,7 @@ using Blog_Website.Services.IServices;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,13 +15,13 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpContextAccessor();
 
-// ÃßËÑ ãä ÚÏÏ ãÚíä ÎáÇá İÊÑÉ ÒãäíÉ ãÍÏÏÉ API ÌÇåÒ íãäÚ ÇáãÓÊÎÏã ãä ØáÈ äİÓ ÇáÜ Middleware 
+// Ø£ÙƒØ«Ø± Ù…Ù† Ø¹Ø¯Ø¯ Ù…Ø¹ÙŠÙ† Ø®Ù„Ø§Ù„ ÙØªØ±Ø© Ø²Ù…Ù†ÙŠØ© Ù…Ø­Ø¯Ø¯Ø© API Ø¬Ø§Ù‡Ø² ÙŠÙ…Ù†Ø¹ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ù…Ù† Ø·Ù„Ø¨ Ù†ÙØ³ Ø§Ù„Ù€ Middleware 
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("otpResendPolicy", limiterOptions =>
     {
         limiterOptions.Window = TimeSpan.FromMinutes(1);
-        limiterOptions.PermitLimit = 1; // ãÓãæÍ ãÑå ßá ÏŞíŞÉ
+        limiterOptions.PermitLimit = 1; // Ù…Ø³Ù…ÙˆØ­ Ù…Ø±Ù‡ ÙƒÙ„ Ø¯Ù‚ÙŠÙ‚Ø©
         limiterOptions.QueueLimit = 0;
     });
 });
@@ -32,17 +34,25 @@ builder.Services.AddSession(options =>
 });
 
 // Register DbContext service
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("constr")));
+builder.Services.AddDbContext<AppDbContext>(
+    options => {
+        options.UseSqlServer(builder.Configuration.GetConnectionString("constr"));
+        options.EnableSensitiveDataLogging(); // ğŸ‘ˆ Ø¯Ø§ Ù‡ÙŠØ³Ø§Ø¹Ø¯Ùƒ ØªØ´ÙˆÙ Ø§Ù„Ù‚ÙŠÙ… Ø§Ù„Ù„ÙŠ Ø³Ø¨Ø¨Øª Ø§Ù„Ø®Ø·Ø£
+    }
+);
+
 
 // Register Identity service
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // ÇáÑãæÒ Ïí ßáåÇ æßá ÇáÍÑæİ æÇáãÓÇİÇÊ ßãÇä UserName field ÚÔÇä íŞÈá İí Çá 
+    // Ø§Ù„Ø±Ù…ÙˆØ² Ø¯ÙŠ ÙƒÙ„Ù‡Ø§ ÙˆÙƒÙ„ Ø§Ù„Ø­Ø±ÙˆÙ ÙˆØ§Ù„Ù…Ø³Ø§ÙØ§Øª ÙƒÙ…Ø§Ù† UserName field Ø¹Ø´Ø§Ù† ÙŠÙ‚Ø¨Ù„ ÙÙŠ Ø§Ù„ 
     options.User.AllowedUserNameCharacters =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ";
 })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddSignalR();
 
 // Register some services
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -51,6 +61,7 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IFollowService, FollowService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 var app = builder.Build();
@@ -68,7 +79,11 @@ app.UseSession();
 app.UseRateLimiter();
 app.UseRouting();
 
+app.MapHub<CommentHub>("/commentHub");
+app.MapHub<NotificationHub>("/notificationHub");
+
 app.UseAuthorization();
+
 
 app.MapStaticAssets();
 

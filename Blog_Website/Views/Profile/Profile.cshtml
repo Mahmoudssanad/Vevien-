@@ -74,7 +74,8 @@
 
                     <!-- Stats -->
                     <div class="d-flex justify-content-around text-center mb-4">
-                        <a asp-action="MyPosts" asp-controller="Post" asp-route-userId="@Model.UserId">
+                        <a asp-action="MyPosts" asp-controller="Post" asp-route-userId="@Model.UserId"
+                           class="fw-semibold text-decoration-none text-dark">
                             <div>
                                 <h6 class="fw-bold mb-0">@Model.PostsCount</h6>
                                 <small class="text-muted">Posts</small>
@@ -82,15 +83,17 @@
                         </a>
 
 
-                        <a asp-action="GetFollowers" asp-controller="Follow" asp-route-userId="@Model.UserId">
+                        <a asp-action="GetFollowing" asp-controller="Follow" asp-route-userId="@Model.UserId"
+                           class="fw-semibold text-decoration-none text-dark">
                             <div>
-                                <h6 class="fw-bold mb-0">@Model.CountFollowers</h6>
+                                <h6 class="fw-bold mb-0">@Model.CountFollowing</h6>
                                 <small class="text-muted">Following</small>
                             </div>
                         </a>
-                        <a asp-action="GetFollowing" asp-controller="Follow" asp-route-userId="@Model.UserId">
+                        <a asp-action="GetFollowers" asp-controller="Follow" asp-route-userId="@Model.UserId"
+                           class="fw-semibold text-decoration-none text-dark">
                             <div>
-                                <h6 class="fw-bold mb-0">@Model.CountFollowing</h6>
+                                <h6 class="fw-bold mb-0">@Model.CountFollowers</h6>
                                 <small class="text-muted">Followers</small>
                             </div>
                         </a>

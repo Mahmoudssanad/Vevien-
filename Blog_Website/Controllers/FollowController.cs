@@ -1,9 +1,12 @@
 ﻿using Blog_Website.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace Blog_Website.Controllers
 {
+    [Authorize]
     public class FollowController : Controller
     {
         private readonly IFollowService _followService;
