@@ -1,0 +1,20 @@
+﻿@model List<Blog_Website.Models.Entities.ApplicationUser>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="p-3 text-muted text-center">No users found</div>
+}
+else
+{
+    <ul class="list-group list-group-flush">
+        @foreach (var user in Model)
+        {
+            <li class="list-group-item d-flex align-items-center">
+                <img src="@user.ImageURL" alt="profile" class="rounded-circle me-2" width="35" height="35" />
+                <a href="/Profile/Profile/@user.Id" class="text-decoration-none text-dark">
+                    @user.UserName
+                </a>
+            </li>
+        }
+    </ul>
+}

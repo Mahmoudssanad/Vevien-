@@ -28,7 +28,7 @@ namespace Blog_Website.ViewComponents
             if (user == null)
                 return View(new List<Notification>());
 
-            var notifications = await _notificationService.GetUserNotificationsAsync(user.Id, page, 5); // 5 إشعارات في الصفحة
+            var notifications = await _notificationService.GetUserNotificationsAsync(user.Id, page, 5);
 
             return View(notifications);
         }
