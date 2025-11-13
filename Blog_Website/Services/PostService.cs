@@ -16,7 +16,8 @@ namespace Blog_Website.Services
         private readonly IFollowService _followService;
         private readonly INotificationService _notifiService;
 
-        public PostService(AppDbContext context, IHttpContextAccessor http, IWebHostEnvironment webHost, IFollowService followService, INotificationService notifiService)
+        public PostService(AppDbContext context, IHttpContextAccessor http,
+            IWebHostEnvironment webHost, IFollowService followService, INotificationService notifiService)
         {
             _context = context;
             _http = http;
@@ -67,29 +68,31 @@ namespace Blog_Website.Services
                 await _context.Posts.AddAsync(newPost);
                 await _context.SaveChangesAsync();
 
-                var followers = await _followService.GetFollowingsAsync(userId);
-                var user = await _context.Users.FindAsync(userId);
-
-                var redirectUrl = $"/Post/Details?postId={newPost.Id}";
-
-
-                foreach (var follower in followers)
+                
+                if (newPost.Visible || newPost.Public)
                 {
-                    var notification = new AddNotificationViewModel
+                    var followers = await _followService.GetFollowingsAsync(userId);
+                    var user = await _context.Users.FindAsync(userId);
+
+                    var redirectUrl = $"/Post/Details?postId={newPost.Id}";
+
+                    foreach (var follower in followers)
                     {
-                        SenderId = userId,
-                        ReceiverId = follower.Id,
-                        Type = "Post",
-                        Title = "New Post",
-                        Description = $"{user!.UserName} Add New Post",
-                        RedirectUrl = redirectUrl
-                    };
-                    if (!string.IsNullOrEmpty(follower.Id))
-                        await _notifiService.CreateAsync(notification);
+                        var notification = new AddNotificationViewModel
+                        {
+                            SenderId = userId,
+                            ReceiverId = follower.Id,
+                            Type = "Post",
+                            Title = $"{user!.UserName} Add New Post",
+                            Description = $"{user!.UserName} Add New Post",
+                            RedirectUrl = redirectUrl
+                        };
+                        if (!string.IsNullOrEmpty(follower.Id))
+                            await _notifiService.CreateAsync(notification);
+                    }
                 }
             }
-            else
-                Console.WriteLine("Something invalid");
+            
         }
 
         public async Task DeleteAsync(int postId)
@@ -139,7 +142,6 @@ namespace Blog_Website.Services
 
             return post;
         }
-
 
         public async Task<List<Post>> GetFriendsPosts()
         {

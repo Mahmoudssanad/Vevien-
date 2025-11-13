@@ -12,11 +12,13 @@ namespace Blog_Website.Controllers
     {
         private readonly ICommentService _commentService;
         private readonly IHubContext<CommentHub> _hubContext;
+        private readonly IViewRenderService _viewRenderService;
 
-        public CommentController(ICommentService commentService, IHubContext<CommentHub> hubContext)
+        public CommentController(ICommentService commentService, IHubContext<CommentHub> hubContext, IViewRenderService viewRenderService)
         {
             _commentService = commentService;
             _hubContext = hubContext;
+            _viewRenderService = viewRenderService;
         }
 
         public async Task<IActionResult> AddComment(CommentViewModel model)
@@ -28,14 +30,16 @@ namespace Blog_Website.Controllers
 
             var comment = await _commentService.AddCommentAsync(model);
 
-            var partialView = await this.RenderViewAsync("_CommentPartial", comment, true);
+            #region SignalR
+            //var commentHtml = await _viewRenderService.RenderToStringAsync("_CommentPartial", comment);
+            //await _hubContext.Clients.All.SendAsync("ReceiveComment", model.PostId, commentHtml);
+            #endregion
 
-            // 🧠 نبعت الإشعار عبر SignalR لكل المستخدمين (أو حسب الحاجة)
-            await _hubContext.Clients.All.SendAsync("ReceiveComment", model.PostId, partialView);
+            //return Ok();
 
-            return Ok();
-
-            //return PartialView("_CommentPartial", comment);
+            return PartialView("_CommentPartial", comment);
         }
+
+
     }
 }

@@ -1,10 +1,12 @@
 ﻿using Blog_Website.Models.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace Blog_Website.ViewModel.Comment
 {
     public class CommentViewModel
     {
-        public string UserId { get; set; }
+        [Required]
+        public string? UserId { get; set; }
         public int PostId { get; set; }
         public string? Content { get; set; }
         public string? ImageUrl { get; set; }

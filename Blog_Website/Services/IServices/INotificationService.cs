@@ -7,7 +7,9 @@ namespace Blog_Website.Services.IServices
     {
         Task CreateAsync(AddNotificationViewModel notificationModel);
 
-        Task<List<Notification>> GetUserNotificationsAsync(string userId);
+        //Task<List<Notification>> GetUserNotificationsAsync(string userId);
+
+        Task<List<Notification>> GetUserNotificationsAsync(string userId, int pageNumber = 1, int pageSize = 5);
 
         Task SendNotificationAsync(Notification notification);
 

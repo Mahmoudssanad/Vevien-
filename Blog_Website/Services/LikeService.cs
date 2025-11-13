@@ -52,17 +52,17 @@ namespace Blog_Website.Services
                 TargetId = targetId,
                 TargetType = targetType
             };
-
             await _context.Likes.AddAsync(newLike);
             await _context.SaveChangesAsync();
 
+            // Add Notification when added like on post
             string? receiverId = null;
             string redirectUrl = "";
 
-            if (targetType == LikeTargetType.Like)
+            if (targetType == LikeTargetType.Post)
             {
                 var post = await _context.Posts
-                .Include(p => p.ApplicationUser) // علشان نجيب صاحب البوست
+                .Include(p => p.ApplicationUser) // Receiver(صاحب البوست)
                 .FirstOrDefaultAsync(p => p.Id == targetId);
 
                 if (post != null)
@@ -70,22 +70,20 @@ namespace Blog_Website.Services
                     receiverId = post.UserId;
                     redirectUrl = $"/Post/Details?postId={post.Id}";
                 }
-                else
-                {
-                    return false;
-                }
             }
 
-            // ✅ الخطوة 2: نمنع إرسال إشعار لنفس الشخص اللي عمل لايك لمنشوره
+            // هنا بنمنع ارسال اشعار لنفس الشخص لو عمل لايك لنفسه
             if (receiverId == userId || receiverId == null)
                 return true;
+
+            var user = await _context.Users.FindAsync(userId);
 
             var notification = new AddNotificationViewModel
             {
                 SenderId = userId,
                 ReceiverId = receiverId,
-                Title = "New Like",
-                Description = $"{userId} add new like for your post",
+                Title = $"{user!.UserName} add new like for your post",
+                Description = $"{user!.UserName} add new like for your post",
                 RedirectUrl = redirectUrl,
                 Type = "Like",
                 TargetId = targetId

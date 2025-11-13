@@ -159,62 +159,13 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
 
 
 @section Scripts {
-    @* Like *@
-    <script>
-        $(document).ready(function () {
-            $(document).on("click", ".like-btn", function (e) {
-                e.preventDefault();
-
-                const button = $(this);
-                const targetId = button.data("target-id");
-                const targetType = button.data("target-type");
-
-                $.ajax({
-                    type: "POST",
-                    url: "/Like/Toggle",
-                    data: {
-                        TargetId: targetId,
-                        TargetType: targetType
-                    },
-                    success: function (response) {
-                        if (response.success) {
-                            console.log("✅ AJAX Response:", response);
-
-                            const icon = button.find("i");
-                            const count = button.find(".like-count");
-
-                            // تغيير الأيقونة حسب الحالة
-                            if (response.liked) {
-                                icon.removeClass("fa-regular").addClass("fa-solid text-danger");
-                            } else {
-                                icon.removeClass("fa-solid text-danger").addClass("fa-regular");
-                            }
-
-                            // تحديث العدد
-                            count.text(response.count);
-                        } else {
-                            console.warn("⚠️ Server returned success=false");
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("❌ AJAX Error:", error);
-                    }
-                });
-            });
-        });
-    </script>
-
-    @* Modal *@
+   
     <script>
         $(document).ready(function () {
 
-            // لما المستخدم يضغط على زر "X Likes"
-            $(document).on("click", ".open-likes-modal", function () {
-
-                const postId = $(this).data("post-id");
+            // 🧩 دالة تحميل المستخدمين داخل المودال
+            function loadLikes(postId) {
                 const likesList = $("#likesList");
-
-                // نفضي المودال قبل ما نحمّل الداتا الجديدة
                 likesList.empty();
 
                 $.ajax({
@@ -226,8 +177,7 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
                             return;
                         }
 
-                        // نضيف كل المستخدمين جوه الليست
-                               users.forEach(user => {
+                        users.forEach(user => {
                             const profilePic = user.imageURL
                                 ? `<img src="${user.imageURL}" class="rounded-circle me-2" width="35" height="35">`
                                 : `<i class="fa-regular fa-user me-2 fa-lg"></i>`;
@@ -242,15 +192,64 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
                                 </li>
                             `);
                         });
-
                     },
                     error: function (xhr, status, error) {
                         likesList.append(`<li class="list-group-item text-danger">Error loading likes.</li>`);
                         console.error("❌ AJAX Error:", error);
                     }
                 });
+            }
+
+            // 🎯 لما المستخدم يضغط على "2 Likes" → افتح المودال
+            $(document).on("click", ".open-likes-modal", function () {
+                const postId = $(this).data("post-id");
+                loadLikes(postId);
             });
 
+            // ❤️ عند الضغط على زر اللايك
+            $(document).on("click", ".like-btn", function (e) {
+                e.preventDefault();
+
+                const button = $(this);
+                const postId = button.data("target-id"); // نفس قيمة data-post-id في الأزرار الأخرى
+                const targetType = button.data("target-type");
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Like/Toggle",
+                    data: {
+                        TargetId: postId,
+                        TargetType: targetType
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            const icon = button.find("i");
+                            const count = button.find(".like-count");
+
+                            // 🔁 تغيير الأيقونة
+                            if (response.liked) {
+                                icon.removeClass("fa-regular").addClass("fa-solid text-danger");
+                            } else {
+                                icon.removeClass("fa-solid text-danger").addClass("fa-regular");
+                            }
+
+                            // 🔢 تحديث العدد في الزر (Like 1)
+                            count.text(response.count);
+
+                            // 🔢 تحديث العدد اللي في الزر اللي بيعرض "2 Likes"
+                            $(`.open-likes-modal[data-post-id='${postId}']`).text(`${response.count} Likes`);
+
+                            // ✅ لو المودال مفتوح حاليًا، نحدث محتواه
+                            if ($("#likesModal").hasClass("show")) {
+                                loadLikes(postId);
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("❌ AJAX Error:", error);
+                    }
+                });
+            });
         });
     </script>
 
@@ -278,5 +277,52 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
             });
         });
     </script>
+    @*<script src="~/microsoft-signalr/signalr.js"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/commentHub")
+            .build();
+
+        // ✅ عند استقبال كومنت جديد من السيرفر
+        connection.on("ReceiveComment", (postId, commentHtml) => {
+            const container = document.querySelector(`#post-${postId}`);
+            if (container) {
+                const commentsContainer = container.querySelector(".comments-container");
+                if (commentsContainer) {
+                    commentsContainer.insertAdjacentHTML("afterbegin", commentHtml);
+                }
+            }
+        });
+
+        connection.start().catch(err => console.error("SignalR Error:", err.toString()));
+
+        // ✅ عند إرسال الكومنت
+        $(document).on("submit", "#commentForm", async function (e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const data = {
+                PostId: form.find("input[name='PostId']").val(),
+                Content: form.find("input[name='Content']").val(),
+                UserId: "@User.FindFirstValue(ClaimTypes.NameIdentifier)"
+            };
+
+            const response = await fetch("/Comment/AddComment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                form.find("input[name='Content']").val(''); // يمسح الحقل بعد الإرسال
+            } else {
+                console.error("❌ Add comment failed:", await response.text());
+            }
+        });
+        </script>*@
+
+
 }
 

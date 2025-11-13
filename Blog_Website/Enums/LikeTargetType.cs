@@ -2,7 +2,7 @@
 {
     public enum LikeTargetType
     {
-        Like,
+        Post,
         Comment
     }
 }

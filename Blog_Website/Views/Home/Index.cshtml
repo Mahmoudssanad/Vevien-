@@ -6,10 +6,6 @@
     ViewData["Title"] = "Public Feed";
 }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-
 @* like modal to show user who liked the post *@
 <div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -143,58 +139,10 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            $(document).on("click", ".like-btn", function (e) {
-                e.preventDefault();
 
-                const button = $(this);
-                const targetId = button.data("target-id");
-                const targetType = button.data("target-type");
-
-                $.ajax({
-                    type: "POST",
-                    url: "/Like/Toggle",
-                    data: {
-                        TargetId: targetId,
-                        TargetType: targetType
-                    },
-                    success: function (response) {
-                        if (response.success) {
-                            console.log("✅ AJAX Response:", response);
-
-                            const icon = button.find("i");
-                            const count = button.find(".like-count");
-
-                            // تغيير الأيقونة حسب الحالة
-                            if (response.liked) {
-                                icon.removeClass("fa-regular").addClass("fa-solid text-danger");
-                            } else {
-                                icon.removeClass("fa-solid text-danger").addClass("fa-regular");
-                            }
-
-                            // تحديث العدد
-                            count.text(response.count);
-                        } else {
-                            console.warn("⚠️ Server returned success=false");
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("❌ AJAX Error:", error);
-                    }
-                });
-            });
-        });
-    </script>
-
-    <script>
-        $(document).ready(function () {
-
-            // لما المستخدم يضغط على زر "X Likes"
-            $(document).on("click", ".open-likes-modal", function () {
-
-                const postId = $(this).data("post-id");
+            // 🧩 دالة تحميل المستخدمين داخل المودال
+            function loadLikes(postId) {
                 const likesList = $("#likesList");
-
-                // نفضي المودال قبل ما نحمّل الداتا الجديدة
                 likesList.empty();
 
                 $.ajax({
@@ -206,8 +154,7 @@
                             return;
                         }
 
-                        // نضيف كل المستخدمين جوه الليست
-                               users.forEach(user => {
+                        users.forEach(user => {
                             const profilePic = user.imageURL
                                 ? `<img src="${user.imageURL}" class="rounded-circle me-2" width="35" height="35">`
                                 : `<i class="fa-regular fa-user me-2 fa-lg"></i>`;
@@ -222,15 +169,64 @@
                                 </li>
                             `);
                         });
-
                     },
                     error: function (xhr, status, error) {
                         likesList.append(`<li class="list-group-item text-danger">Error loading likes.</li>`);
                         console.error("❌ AJAX Error:", error);
                     }
                 });
+            }
+
+            // 🎯 لما المستخدم يضغط على "2 Likes" → افتح المودال
+            $(document).on("click", ".open-likes-modal", function () {
+                const postId = $(this).data("post-id");
+                loadLikes(postId);
             });
 
+            // ❤️ عند الضغط على زر اللايك
+            $(document).on("click", ".like-btn", function (e) {
+                e.preventDefault();
+
+                const button = $(this);
+                const postId = button.data("target-id"); // نفس قيمة data-post-id في الأزرار الأخرى
+                const targetType = button.data("target-type");
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Like/Toggle",
+                    data: {
+                        TargetId: postId,
+                        TargetType: targetType
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            const icon = button.find("i");
+                            const count = button.find(".like-count");
+
+                            // 🔁 تغيير الأيقونة
+                            if (response.liked) {
+                                icon.removeClass("fa-regular").addClass("fa-solid text-danger");
+                            } else {
+                                icon.removeClass("fa-solid text-danger").addClass("fa-regular");
+                            }
+
+                            // 🔢 تحديث العدد في الزر (Like 1)
+                            count.text(response.count);
+
+                            // 🔢 تحديث العدد اللي في الزر اللي بيعرض "2 Likes"
+                            $(`.open-likes-modal[data-post-id='${postId}']`).text(`${response.count} Likes`);
+
+                            // ✅ لو المودال مفتوح حاليًا، نحدث محتواه
+                            if ($("#likesModal").hasClass("show")) {
+                                loadLikes(postId);
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("❌ AJAX Error:", error);
+                    }
+                });
+            });
         });
     </script>
 }

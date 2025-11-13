@@ -51,7 +51,7 @@ namespace Blog_Website.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPostLikes(int postId)
         {
-            var likes = await _likeService.GetAllLikesAsync(postId, LikeTargetType.Like);
+            var likes = await _likeService.GetAllLikesAsync(postId, LikeTargetType.Post);
 
             // نرجع اسم المستخدم وصورته فقط مثلاً
             var users = likes.Select(u => new

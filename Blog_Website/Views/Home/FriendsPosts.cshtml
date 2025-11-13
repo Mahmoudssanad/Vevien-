@@ -6,6 +6,23 @@
     ViewData["Title"] = "Public Feed";
 }
 
+@* like modal to show user who liked the post *@
+<div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="likesModalLabel">Liked by</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="likesList" class="list-group">
+                    <!-- Users will be injected here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container mt-4" style="max-width: 650px;">
     @if (Model != null && Model.Any())
     {
@@ -96,36 +113,94 @@
 
 @section Scripts {
     <script>
-        $(document).on("click", ".like-btn", function (e) {
-            e.preventDefault();
+        $(document).ready(function () {
 
-            const button = $(this);
-            const targetId = button.data("target-id");
-            const targetType = button.data("target-type");
+            // 🧩 دالة تحميل المستخدمين داخل المودال
+            function loadLikes(postId) {
+                const likesList = $("#likesList");
+                likesList.empty();
 
-            $.ajax({
-                type: "POST",
-                url: "/Like/Toggle",
-                data: {
-                    TargetId: targetId,
-                    TargetType: targetType
-                },
-                success: function (response) {
-                    if (response.success) {
-                        const icon = button.find("i");
-                        const count = button.find(".like-count");
-
-                        // تبديل الأيقونة
-                        if (response.liked) {
-                            icon.removeClass("fa-regular").addClass("fa-solid text-danger");
-                        } else {
-                            icon.removeClass("fa-solid text-danger").addClass("fa-regular");
+                $.ajax({
+                    type: "GET",
+                    url: `/Like/GetPostLikes?postId=${postId}`,
+                    success: function (users) {
+                        if (users.length === 0) {
+                            likesList.append(`<li class="list-group-item text-muted">No likes yet.</li>`);
+                            return;
                         }
 
-                        // تحديث عدد اللايكات
-                        count.text(response.count);
+                        users.forEach(user => {
+                            const profilePic = user.imageURL
+                                ? `<img src="${user.imageURL}" class="rounded-circle me-2" width="35" height="35">`
+                                : `<i class="fa-regular fa-user me-2 fa-lg"></i>`;
+
+                            likesList.append(`
+                                <li class="list-group-item d-flex align-items-center">
+                                    <a href="/Profile/Profile?userId=${user.id}"
+                                       class="text-decoration-none text-dark d-flex align-items-center w-100">
+                                        ${profilePic}
+                                        <span>${user.userName}</span>
+                                    </a>
+                                </li>
+                            `);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        likesList.append(`<li class="list-group-item text-danger">Error loading likes.</li>`);
+                        console.error("❌ AJAX Error:", error);
                     }
-                }
+                });
+            }
+
+            // 🎯 لما المستخدم يضغط على "2 Likes" → افتح المودال
+            $(document).on("click", ".open-likes-modal", function () {
+                const postId = $(this).data("post-id");
+                loadLikes(postId);
+            });
+
+            // ❤️ عند الضغط على زر اللايك
+            $(document).on("click", ".like-btn", function (e) {
+                e.preventDefault();
+
+                const button = $(this);
+                const postId = button.data("target-id"); // نفس قيمة data-post-id في الأزرار الأخرى
+                const targetType = button.data("target-type");
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Like/Toggle",
+                    data: {
+                        TargetId: postId,
+                        TargetType: targetType
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            const icon = button.find("i");
+                            const count = button.find(".like-count");
+
+                            // 🔁 تغيير الأيقونة
+                            if (response.liked) {
+                                icon.removeClass("fa-regular").addClass("fa-solid text-danger");
+                            } else {
+                                icon.removeClass("fa-solid text-danger").addClass("fa-regular");
+                            }
+
+                            // 🔢 تحديث العدد في الزر (Like 1)
+                            count.text(response.count);
+
+                            // 🔢 تحديث العدد اللي في الزر اللي بيعرض "2 Likes"
+                            $(`.open-likes-modal[data-post-id='${postId}']`).text(`${response.count} Likes`);
+
+                            // ✅ لو المودال مفتوح حاليًا، نحدث محتواه
+                            if ($("#likesModal").hasClass("show")) {
+                                loadLikes(postId);
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("❌ AJAX Error:", error);
+                    }
+                });
             });
         });
     </script>

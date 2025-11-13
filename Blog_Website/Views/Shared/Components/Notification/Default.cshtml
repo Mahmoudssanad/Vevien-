@@ -22,20 +22,42 @@
                 </a>
             </li>
         }
-    </ul>
 
+        <!-- زر تحميل المزيد -->
+        <li>
+            <button class="dropdown-item text-center text-primary" id="load-more-btn">
+                Load more
+            </button>
+        </li>
+    </ul>
 </div>
 
 <style>
-        .dropdown-item.unread {
-        background-color: #e7f3ff; /* أزرق فاتح زي بتاع فيسبوك */
-        font-weight: 600;          /* خط سميك بسيط */
-        border-left: 4px solid #1877f2; /* خط جانبي أزرق */
+    .dropdown-item.unread {
+        background-color: #e7f3ff;
+        font-weight: 600;
+        border-left: 4px solid #1877f2;
     }
 
-    /* الاشعار المقروء */
     .dropdown-item {
         background-color: white;
         font-weight: normal;
     }
 </style>
+
+
+<script>
+    let currentPage = 1;
+
+    document.getElementById("load-more-btn").addEventListener("click", function () {
+        currentPage++;
+        fetch(`/Notification/Load?page=${currentPage}`)
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const newItems = parser.parseFromString(html, 'text/html').querySelectorAll('#notification-list li:not(:last-child)');
+                newItems.forEach(item => document.querySelector('#notification-list').insertBefore(item, document.getElementById("load-more-btn").parentElement));
+            })
+            .catch(err => console.error(err));
+    });
+</script>

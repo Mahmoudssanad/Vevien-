@@ -39,6 +39,7 @@ namespace Blog_Website.Services
                 await _context.Follows.AddAsync(newFollow);
                 await _context.SaveChangesAsync();
 
+                var user = await _context.Users.FindAsync(followingId);
                 var redirectUrl = $"/Profile/Profile?userId={followingId}";
 
                 var notification = new AddNotificationViewModel
@@ -46,7 +47,7 @@ namespace Blog_Website.Services
                     SenderId = followingId,
                     ReceiverId = followerId,
                     Description = $"Start following you",
-                    Title = $"New Follow for you from...",
+                    Title = $"{user!.UserName} start following you",
                     Type = "Follow",
                     RedirectUrl = redirectUrl
                 };

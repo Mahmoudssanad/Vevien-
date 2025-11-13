@@ -29,16 +29,29 @@ namespace Blog_Website.Services
 
             await _hubContext.Clients.User(notification.ReceiverId!)
                 .SendAsync("ReceiveNotification", notification.Title, notification.RedirectUrl);
-
-            //await SendNotificationAsync(notification);
         }
 
-        public async Task<List<Notification>> GetUserNotificationsAsync(string userId)
+        //public async Task<List<Notification>> GetUserNotificationsAsync(string userId)
+        //{
+        //    var notifications = await _context.Notifications
+        //        .Include(X => X.Sender)
+        //        .Where(x => x.ReceiverId == userId)
+        //        .OrderByDescending(X => X.CreatedDate)
+        //        .ToListAsync();
+
+        //    return notifications;
+        //}
+
+        public async Task<List<Notification>> GetUserNotificationsAsync(string userId, int pageNumber = 1, int pageSize = 5)
         {
-            var notifications = await _context.Notifications
-                .Include(X => X.Sender)
+            var query = _context.Notifications
+                .Include(x => x.Sender)
                 .Where(x => x.ReceiverId == userId)
-                .OrderByDescending(X => X.CreatedDate)
+                .OrderByDescending(x => x.CreatedDate);
+
+            var notifications = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
             return notifications;

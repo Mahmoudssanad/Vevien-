@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Blog_Website.styles.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
     integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0myeS8K/Np9nAZ8L6mGZPR3U9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
@@ -18,48 +22,67 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Blog_Website</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <a class="navbar-brand fw-bold text-primary" href="/Home/Index" style="font-size: 1.5rem;">
+                    BlogBook
+                </a>
+                <!-- 🔍 Search Box -->
+                <form class="d-none d-md-flex mx-auto w-50" role="search" action="/Search/Index" method="get">
+                    <div class="input-group rounded-pill shadow-sm">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                        </span>
+                        <input type="text" name="query" class="form-control border-0 bg-light"
+                               placeholder="Search posts, users..." aria-label="Search">
+                    </div>
+                </form>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
 
+                    <ul class="navbar-nav flex-grow-1">
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item">
-                                @* هيخش علي اللي مسجل دخول  *@
-                                <a class="nav-link" asp-controller="Profile" asp-action="Profile" asp-route-userId="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value">
-                                    <i class="bi bi-person-circle"></i> Profile
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Profile" asp-action="GetAll">
-                                    <i class="bi bi-person-circle"></i> Explore
-                                </a>
-                            </li>
-
                             <li class="nav-item mx-2">
-                                <a class="nav-link text-primary" href="/Post/Add" title="Add Post">
-                                    Add Post <i class="fa fa-plus-square fa-lg"></i>
+                                <a class="nav-link" href="/Home/Index" title="Home">
+                                    <i class="fa-solid fa-house fa-lg"></i>
                                 </a>
                             </li>
 
+                            <!-- 🌍 Explore -->
                             <li class="nav-item mx-2">
-                                <a class="nav-link" href="/Message/Index">
-                                    Message <i class="fa fa-paper-plane fa-lg"></i>
+                                <a class="nav-link" asp-controller="Profile" asp-action="GetAll" title="Explore">
+                                    <i class="fa-solid fa-compass fa-lg"></i>
+                                </a>
+                            </li>
+
+                            <!-- ➕ Add Post -->
+                            <li class="nav-item mx-2">
+                                <a class="nav-link text-primary" href="/Post/Add" title="Create Post">
+                                    <i class="fa-solid fa-square-plus fa-lg"></i>
+                                </a>
+                            </li>
+
+                            <!-- 💬 Messages -->
+                            <li class="nav-item mx-2">
+                                <a class="nav-link" href="/Message/Index" title="Messages">
+                                    <i class="fa-solid fa-message fa-lg"></i>
+                                </a>
+                            </li>
+
+                            <!-- 🔔 Notifications -->
+                            @await Component.InvokeAsync("Notification")
+
+
+                            <!-- 👤 Profile -->
+                            <li class="nav-item mx-2">
+                                <a class="nav-link" asp-controller="Profile" asp-action="Profile"
+                                   asp-route-userId="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value"
+                                   title="Profile">
+                                    <i class="fa-solid fa-user-circle fa-lg"></i>
                                 </a>
                             </li>
                         }
                     </ul>
                 </div>
 
-                @await Component.InvokeAsync("Notification")
 
                 <form id="logoutForm">
                     @Html.AntiForgeryToken()
@@ -105,6 +128,8 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 
     
