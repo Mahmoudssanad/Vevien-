@@ -4,6 +4,7 @@ using Blog_Website.Models.Entities;
 using Blog_Website.Models.Data;
 using Microsoft.EntityFrameworkCore;
 using Blog_Website.Services.IServices;
+using Blog_Website.Enums;
 
 namespace Blog_Website.Services
 {
@@ -42,7 +43,7 @@ namespace Blog_Website.Services
 
             var mail = new MailMessage
             {
-                From = new MailAddress(username),
+                From = new MailAddress(username!),
                 Subject = subject,
                 Body = body,
                 IsBodyHtml = true // HTML لو عايز الرسالة فيها
@@ -90,7 +91,41 @@ namespace Blog_Website.Services
         {
             var otp = await _context.OTPs.FirstOrDefaultAsync(x => x.Email == email);
 
-            return otp;
+            return otp!;
+        }
+
+        // seperate of concern => OTP in controller علشان منعملش التحقق من ال 
+        public async Task<bool> ValidateOtpAsync(string email, string otpCode, OtpFlow flow)
+        {
+            var found = await FindByEmailAsync(email);
+
+            if (found is null) return false;
+
+            var valid = found.Code == otpCode && found.ExpiryTime > DateTime.UtcNow && !found.IsUsed;
+
+            if (!valid) return false;
+
+            found.IsUsed = true;
+            await UpdateAsync(found);
+
+            return true;
+        }
+
+        public async Task GenerateAndSendOtpAsync(string email, string userName)
+        {
+            var otp = new Random().Next(100000, 999999).ToString();
+
+            await SendEmailAsync(email, "Confirm your email", $"Welcome {userName}!<br>Your OTP is: <b>{otp}</b>");
+
+            var otpEntity = new OTP
+            {
+                Email = email,
+                Code = otp,
+                ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                IsUsed = false
+            };
+
+            await AddAsync(otpEntity);
         }
     }
 }

@@ -1,18 +1,23 @@
 ﻿using Blog_Website.Models.Entities;
 using Blog_Website.ViewModel.Post;
+using System.ComponentModel.DataAnnotations;
 
 namespace Blog_Website.ViewModel.Profile
 {
     public class ProfileViewModel
     {
-        public string UserId { get; set; }
-        public string UserName { get; set; }
+        [Required]
+        public string? UserId { get; set; }
 
-        public string Email { get; set; }
+        [Required]
+        public string? UserName { get; set; }
+
+        [Required]
+        public string? Email { get; set; }
 
         public DateOnly? BirthDate { get; set; }
 
-        public string Image { get; set; } = "~/images/profile/default.png";
+        public string? Image { get; set; }
 
         public bool IsOwner { get; set; }
 
@@ -21,9 +26,9 @@ namespace Blog_Website.ViewModel.Profile
         public int CountFollowers { get; set; }
         public int CountFollowing { get; set; }
 
-        public List<PostViewModel> Posts {  get; set; }
+        public List<PostViewModel> Posts { get; set; } = new List<PostViewModel>();
 
-        public ApplicationUser User {  get; set; }
+        public ApplicationUser? User {  get; set; }
 
         public int PostsCount { get; set; }
 

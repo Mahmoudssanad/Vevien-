@@ -1,6 +1,5 @@
 ﻿using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
-using Blog_Website.ViewModel.Post;
 using Blog_Website.ViewModel.Profile;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -56,7 +55,7 @@ namespace Blog_Website.Controllers
 
             var currentUserId = _userManager.GetUserId(User);
 
-            var isFollow = await _followService.IsFollowingAsync(userId, currentUserId);
+            var isFollow = await _followService.IsFollowingAsync(userId, currentUserId!);
 
             var followersCount = await _followService.FollowersCountAsync(userId);
             var followingsCount = await _followService.FollowingCountAsync(userId);
@@ -64,9 +63,9 @@ namespace Blog_Website.Controllers
 
             var userProfile = new ProfileViewModel
                 {
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    Image = user.ImageURL,
+                    UserName = user.UserName!,
+                    Email = user.Email!,
+                    Image = user.ImageURL!,
                     BirthDate = user.Birthdate,
                     UserId = user.Id,
                     IsOwner = flag,
@@ -106,11 +105,11 @@ namespace Blog_Website.Controllers
         public async Task<IActionResult> Edit(EditViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
 
             if (ModelState.IsValid)
             {
-                var imagePath = user.ImageURL;
+                var imagePath = user!.ImageURL;
 
                 if(model.Image != null)
                 {

@@ -1,5 +1,4 @@
-﻿using Blog_Website.Models.Data;
-using Blog_Website.Models.Entities;
+﻿using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
 using Blog_Website.ViewModel.Profile;
 using Microsoft.AspNetCore.Identity;
@@ -20,16 +19,16 @@ namespace Blog_Website.Services
             _httpContext = httpContext;
             _followService = followService;
         }
-        public async Task DeleteAsync(string userId)
+        public Task DeleteAsync(string userId)
         {
             throw new NotImplementedException();
         }
 
         public async Task<List<ProfileViewModel>> GetAllAsync()
         {
-            var currentUserId = _httpContext.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var followings = await _followService.GetFollowersAsync(currentUserId);
+            var followings = await _followService.GetFollowersAsync(currentUserId!);
 
             var followingsUserId = followings.Select(x => x.Id);
 
@@ -39,10 +38,10 @@ namespace Blog_Website.Services
 
             return allUsers.Select(u => new ProfileViewModel
             {
-                Email = u.Email,
-                UserName = u.UserName,
+                Email = u.Email!,
+                UserName = u.UserName!,
                 UserId = u.Id,
-                Image = u.ImageURL,
+                Image = u.ImageURL!,
             }).ToList();
         }
 
@@ -50,7 +49,7 @@ namespace Blog_Website.Services
         {
             var userId = _httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId!);
 
             if(user == null)
             {

@@ -65,6 +65,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 // When use signalR with comment partial view
 builder.Services.AddScoped<IViewRenderService, ViewRenderService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 
 var app = builder.Build();

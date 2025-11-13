@@ -11,6 +11,7 @@ namespace Blog_Website.Controllers
                 return Content("");
 
             var users = await _searchService.UsersSearch();
+
             users = users
                 .Where(x => x.UserName != null && x.UserName.Contains(query, StringComparison.OrdinalIgnoreCase))
                 .ToList();

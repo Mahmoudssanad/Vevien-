@@ -4,8 +4,6 @@
     ViewData["Title"] = "Show Profile"; 
 }
 
-
-
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -16,7 +14,6 @@
                         @if(Model.Image != null)
                         {
                             <img src="@Model.Image"
-                            alt="@Model.UserName"
                             class="rounded-circle me-4"
                             style="width: 120px; height: 120px; object-fit: cover;">
                         }
@@ -39,7 +36,7 @@
                             }
 
 
-                            @if (User.Identity.IsAuthenticated && Model.IsOwner)
+                            @if (User.Identity!.IsAuthenticated && Model.IsOwner)
                             {
                                 <a asp-action="Edit" asp-controller="Profile" asp-route-userId="@Model.UserId"
                                 class="btn btn-outline-primary btn-sm">Edit profile </a>
