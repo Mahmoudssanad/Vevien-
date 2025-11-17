@@ -60,6 +60,14 @@ namespace Blog_Website.Controllers
         [HttpGet]
         public IActionResult VerifyOtp(string email, OtpFlow flow)
         {
+            var registerData = HttpContext.Session.GetString("RegisterData");
+
+            if (flow == OtpFlow.Register && registerData is null)
+            {
+                // المستخدم حاول يدخل مباشرة باللينك
+                TempData["Error"] = "You cannot access this page directly.";
+                return RedirectToAction("Register");
+            }
             return View(new OtpViewModel { Email = email, Flow = flow});
         }
 
@@ -107,70 +115,13 @@ namespace Blog_Website.Controllers
 
         [HttpGet]
         [EnableRateLimiting("otpResendPolicy")]
-        public async Task<IActionResult> ResendOtp(string email, string flow)
+        public async Task<IActionResult> ResendOtp(string email, OtpFlow flow)
         {
-            var found = await _emailService.FindByEmailAsync(email);
+            var result = await _emailService.ResendOtpAsync(email, flow);
 
+            TempData[result.Success ? "Message" : "Error"] = result.Message;
 
-            if(found != null && !found.IsUsed ) // متمش استخدمها قبل كدا otp بتاكد ان ال 
-            {
-                var otp = new Random().Next(100000, 999999).ToString();
-                found.ExpiryTime = DateTime.UtcNow.AddMinutes(2);
-                found.Code = otp;
-                found.IsUsed = false;
-                await _emailService.UpdateAsync(found);
-
-                if(flow == "Register")
-                {
-                    try
-                    {
-                        // مش فاضيه session عشان اتاكد ان ال 
-                        var registerDataJson = HttpContext.Session.GetString("RegisterData");
-
-                        if (!string.IsNullOrEmpty(registerDataJson))
-                        {
-                            var registerData = JsonConvert.DeserializeObject<AccountViewModel>(registerDataJson);
-
-                            await _emailService.SendEmailAsync(email, "Resend verfication code",
-                                $"Welcome {registerData.UserName} \n your code is: {otp}");
-                        }
-                        else
-                        {
-                            await _emailService.SendEmailAsync(email, "Resend verification code",
-                        $"Your verification code is: {otp}");
-                        }
-
-                        TempData["Message"] = "A new OTP has been sent to your email. enjouy";
-
-                        return RedirectToAction("VerifyOtp", new { Email = email, Flow = flow });
-                    }
-                    catch (Exception ex)
-                    {
-                        ModelState.AddModelError("", ex.Message);
-                        //TempData["Error"] = "Failed to send email. Please try again.";
-                    }
-                }
-
-                else if (flow == "ForgetPassword")
-                {
-                    var user = await _userManager.FindByEmailAsync(email);
-                    if (user != null)
-                    {
-                        await _emailService.SendEmailAsync(user.Email!,
-                            "Forget password - Vivena website",
-                            $"Welcome {user.UserName}! \n Your OTP is: {otp}");
-
-                        TempData["Message"] = "A new OTP has been sent to your email.";
-
-                        return RedirectToAction("VerifyOtp", new { email = user.Email, flow = "ForgetPassword" });
-                    }
-                    TempData["Message"] = "Email not found.";
-                    return RedirectToAction("ForgetPassword");
-                }
-
-            }
-            TempData["Message"] = "Incorrect, Please try again";
-            return RedirectToAction("VerifyOtp", new { Email = email, Flow = flow });
+            return RedirectToAction("VerifyOtp", new { email, flow });
         }
 
         [HttpGet]
@@ -187,7 +138,7 @@ namespace Blog_Website.Controllers
             {
                 var found = await _userManager.FindByEmailAsync(model.Email);
 
-                if(found != null)
+                if(found != null && !found.IsDeleted)
                 {
                     var passwordCheck = await _userManager.CheckPasswordAsync(found, model.Password);
 
@@ -197,7 +148,7 @@ namespace Blog_Website.Controllers
                         return RedirectToAction("Index", "Home");
                     }
                 }
-                ModelState.AddModelError("", "Email or password error");
+                ModelState.AddModelError("", "Invalid email or password");
                 return View("Login", model);
             }
             return View("Login", model);
@@ -223,7 +174,7 @@ namespace Blog_Website.Controllers
         {
             if (ModelState.IsValid)
             {
-                var found = await _userManager.FindByEmailAsync(model.Email);
+                var found = await _userManager.FindByEmailAsync(model.Email!);
 
                 if(found == null)
                 {
@@ -231,22 +182,9 @@ namespace Blog_Website.Controllers
                     return View(model);
                 }
 
-                var otp = new Random().Next(100000, 999999).ToString();
+                await _emailService.GenerateAndSendOtpAsync(model.Email!, found.UserName!);
 
-                var newOtp = new OTP
-                {
-                    Code = otp,
-                    ExpiryTime = DateTime.UtcNow.AddMinutes(3),
-                    IsUsed = false,
-                    Email = model.Email
-                };
-                await _emailService.AddAsync(newOtp);
-
-                await _emailService.SendEmailAsync(model.Email, "Viven Blog", $"Welcome {found.UserName} your code is: {otp}");
-
-                TempData["Message"] = "A new OTP has been sent to your email.";
-
-                return RedirectToAction("VerifyOtp", new { email = model.Email, flow = "ForgetPassword" });
+                return RedirectToAction("VerifyOtp", new { email = model.Email, flow = OtpFlow.ForgetPassword });
             }
             ModelState.AddModelError("", "Invaild Email");
             return View(model);
@@ -255,10 +193,14 @@ namespace Blog_Website.Controllers
         [HttpGet]
         public IActionResult ResetPassword(string email)
         {
+            if (email == null)
+                return RedirectToAction("ForgetPassword");
+
             return View(new ResetPasswordViewModel{ Email = email });
         }
 
         [HttpPost]
+        [AutoValidateAntiforgeryToken]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
             if (ModelState.IsValid)
@@ -271,13 +213,14 @@ namespace Blog_Website.Controllers
                     return View(model);
                 }
 
+                // Create Token
                 var token = await _userManager.GeneratePasswordResetTokenAsync(found);
 
+                // Change Password
                 var result = await _userManager.ResetPasswordAsync(found, token, model.Password);
 
                 if (result.Succeeded)
                 {
-                    TempData["SuccessMessage"] = "Password change successfully";
                     return RedirectToAction("Login");
                 }
 

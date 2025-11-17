@@ -15,3 +15,20 @@ $("#logoutBtn").click(function () {
         }
     });
 });
+
+
+$("#deleteBtn").click(function () {
+    $.ajax({
+        url: '/Profile/DeleteAccount',
+        type: 'POST',
+        data: $("#deleteForm").serialize(),
+        success: function (response) {
+            if (response.success) {
+                window.location.href = '/Account/Login';
+            }
+        },
+        error: function () {
+            alert("Error while deleted account!");
+        }
+    });
+});

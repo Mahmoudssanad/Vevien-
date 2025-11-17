@@ -21,10 +21,10 @@ namespace Blog_Website.Services
         public async Task<List<ApplicationUser>> GetAllLikesAsync(int targetId, LikeTargetType targetType)
         {
             var usersLike = await _context.Likes
-                .Where(x => x.TargetId == targetId && x.TargetType == targetType)
+                .Where(x => x.TargetId == targetId && x.TargetType == targetType && !x.ApplicationUser!.IsDeleted)
                 .Select(x => x.ApplicationUser).ToListAsync();
 
-            return usersLike;
+            return usersLike!;
         }
 
         public async Task<bool> IsLikedAsync(int targetId, string userId, LikeTargetType targetType)
@@ -97,7 +97,7 @@ namespace Blog_Website.Services
         public async Task<int> LikesCountAsync(int targetId, LikeTargetType targetType)
         {
             var likeCounts = await _context.Likes
-                .Where(x => x.TargetId == targetId && x.TargetType == targetType)
+                .Where(x => x.TargetId == targetId && x.TargetType == targetType && !x.ApplicationUser!.IsDeleted)
                 .CountAsync();
 
             return likeCounts;

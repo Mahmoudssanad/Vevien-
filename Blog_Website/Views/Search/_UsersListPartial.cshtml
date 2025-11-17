@@ -10,7 +10,14 @@ else
         @foreach (var user in Model)
         {
             <li class="list-group-item d-flex align-items-center">
-                <img src="@user.ImageURL" alt="profile" class="rounded-circle me-2" width="35" height="35" />
+                @if(user.ImageURL is null)
+                {
+                    <img src="~/images/profile/default.png" alt="profile" class="rounded-circle me-2" width="35" height="35" />
+                }
+                else
+                {
+                    <img src="@user.ImageURL" alt="profile" class="rounded-circle me-2" width="35" height="35" />
+                }
                 <a href="/Profile/Profile/@user.Id" class="text-decoration-none text-dark">
                     @user.UserName
                 </a>

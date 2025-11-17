@@ -1,24 +1,19 @@
 ﻿using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
-using Blog_Website.ViewModel.Notification;
 using Blog_Website.ViewModel.Post;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Blog_Website.Controllers
 {
     public class PostController : Controller
     {
         private readonly IPostService _postService;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IFollowService _followService;
-
-        public PostController(IPostService postService, UserManager<ApplicationUser> userManager, IFollowService followService)
+     
+        public PostController(IPostService postService)
         {
             _postService = postService;
-            _userManager = userManager;
-            _followService = followService;
+            
         }
 
         [HttpGet]

@@ -97,8 +97,11 @@ namespace Blog_Website.Services
         public async Task<List<Comment>> GetPostCommentsAsync(int postId)
         {
             var postComments = await _context.Comments
+                .AsNoTracking()
                 .Include(x => x.ApplicationUser)
-                .Where(x => x.PostId == postId)
+                .Where(x => x.PostId == postId 
+                    && x.ApplicationUser != null
+                    && !x.ApplicationUser!.IsDeleted)
                 .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
 

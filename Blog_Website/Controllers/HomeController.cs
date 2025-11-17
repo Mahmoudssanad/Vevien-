@@ -22,6 +22,7 @@ namespace Blog_Website.Controllers
         public async Task<IActionResult> Index()
         {
             var allPublicPosts = await _postService.GetPublicPosts();
+            ViewBag.ActiveTab = "ForYou";
 
             return View(allPublicPosts);
         }
@@ -30,6 +31,7 @@ namespace Blog_Website.Controllers
         public async Task<IActionResult> FriendsPosts()
         {
             var friendsPosts = await _postService.GetFriendsPosts();
+            ViewBag.ActiveTab = "Private";
 
             return View(friendsPosts);
         }

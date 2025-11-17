@@ -9,8 +9,6 @@
     <title>@ViewData["Title"] - Blog_Website</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Blog_Website.styles.css" asp-append-version="true" />
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
           crossorigin="anonymous"
@@ -41,12 +39,10 @@
                     </div>
                 </form>
 
-              
-
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
 
                     <ul class="navbar-nav flex-grow-1">
-                        @if (User.Identity.IsAuthenticated)
+                        @if (User.Identity!.IsAuthenticated)
                         {
                             <li class="nav-item mx-2">
                                 <a class="nav-link" href="/Home/Index" title="Home">
@@ -99,6 +95,8 @@
             </div>
         </nav>
     </header>
+   
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()

@@ -7,7 +7,5 @@ namespace Blog_Website.Services.IServices
     public interface IAccountService
     {
         Task<(bool Succeeded, ApplicationUser? User)> CreateAsync(AccountViewModel data);
-
-        //Task<IdentityResult> RegisterUserAsync(AccountViewModel model);
     }
 }

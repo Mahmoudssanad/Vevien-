@@ -46,7 +46,7 @@ namespace Blog_Website.Services
         {
             var query = _context.Notifications
                 .Include(x => x.Sender)
-                .Where(x => x.ReceiverId == userId)
+                .Where(x => x.ReceiverId == userId && !x.Receiver!.IsDeleted)
                 .OrderByDescending(x => x.CreatedDate);
 
             var notifications = await query
@@ -74,7 +74,7 @@ namespace Blog_Website.Services
         public async Task SendNotificationAsync(Notification notification)
         {
             notification.Sender = await _context.Users
-                .Where(x => x.Id == notification.SenderId)
+                .Where(x => x.Id == notification.SenderId && !x.IsDeleted)
                 .FirstOrDefaultAsync();
 
             await _hubContext.Clients.User(notification.ReceiverId!).SendAsync("ReceiveNotification", notification.Description, notification.RedirectUrl);

@@ -99,9 +99,7 @@ namespace Blog_Website.Services
         {
             var found = await _context.Posts.FirstOrDefaultAsync(x => x.Id == postId);
 
-            if (found == null) ;
-
-            _context.Posts.Remove(found);
+            _context.Posts.Remove(found!);
             await _context.SaveChangesAsync();
         }
 
@@ -109,7 +107,7 @@ namespace Blog_Website.Services
         {
             var userPosts = await _context.Posts
                 .Include(x => x.ApplicationUser)
-                .Where(x => x.UserId == userId && x.Visible)
+                .Where(x => x.UserId == userId && x.Visible && !x.ApplicationUser!.IsDeleted)
                 .OrderByDescending(x => x.CreatedDate)
                 .Select(x => new PostViewModel
                 {
@@ -128,16 +126,16 @@ namespace Blog_Website.Services
         {
             var post = await _context.Posts
                 .Include(x => x.ApplicationUser)
-                .Include(x => x.Comments)
-                .ThenInclude(x => x.ApplicationUser)
-                .FirstOrDefaultAsync(x => x.Id == postId);
+                .Include(x => x.Comments.Where(x => !x.ApplicationUser!.IsDeleted))
+                    .ThenInclude(x => x.ApplicationUser)
+                .FirstOrDefaultAsync(x => x.Id == postId && !x.ApplicationUser.IsDeleted);
 
             if (post == null)
                 return null!;
 
             var userId = _http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId == post.Id);
+            post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId == post.Id && !x.ApplicationUser!.IsDeleted);
             post.IsLikedByCurrentUser = await _context.Likes.AnyAsync(x => x.TargetId == post.Id && x.UserId == userId);
 
             return post;
@@ -145,25 +143,27 @@ namespace Blog_Website.Services
 
         public async Task<List<Post>> GetFriendsPosts()
         {
-            var currentUserId = _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserId = _http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             // Follow اللي انا عامل ليهم Users روحت عشان اجيب ال 
-            var followedUsers = await _followService.GetFollowersAsync(currentUserId);
+            var followedUsers = await _followService.GetFollowingsAsync(currentUserId!);
 
             var followedUsersId = followedUsers.Select(x => x.Id).ToList();
 
             var allFriendsPosts = await _context.Posts
                 .Include(x => x.ApplicationUser)
-                .Where(x => x.Visible && followedUsersId.Contains(x.UserId) || (x.UserId == currentUserId && x.Visible))
+                .Where(x => x.Visible && followedUsersId.Contains(x.UserId)
+                && !x.ApplicationUser.IsDeleted
+                || (x.UserId == currentUserId && x.Visible))
                 .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
 
             // Include Likes Implicitly
             foreach(var post in allFriendsPosts)
             {
-                post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId == post.Id);
+                post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId == post.Id && !x.ApplicationUser!.IsDeleted);
                 post.IsLikedByCurrentUser = await _context.Likes
-                    .AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) && x.TargetId == post.Id);
+                    .AnyAsync(x => x.UserId == _http.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier) && x.TargetId == post.Id);
 
             }
 
@@ -174,16 +174,16 @@ namespace Blog_Website.Services
         {
             var allpublicPosts = await _context.Posts
                 .Include(x => x.ApplicationUser)
-                .Where(x => x.Public && x.Visible)
+                .Where(x => x.Public && x.Visible && !x.ApplicationUser.IsDeleted)
                 .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
 
             // Include Likes Implicitly
             foreach (var post in allpublicPosts)
             {
-                post.TempLikesCount = await _context.Likes.CountAsync(l => l.TargetId == post.Id);
+                post.TempLikesCount = await _context.Likes.CountAsync(l => l.TargetId == post.Id && !l.ApplicationUser!.IsDeleted);
                 post.IsLikedByCurrentUser = await _context.Likes
-                    .AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) && x.TargetId == post.Id);
+                    .AnyAsync(x => x.UserId == _http.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier) && x.TargetId == post.Id);
             }
 
             return allpublicPosts;
@@ -208,8 +208,8 @@ namespace Blog_Website.Services
             foreach (var post in myPosts)
             {
                 post.IsLikedByCurrentUser = await _context.Likes
-                    .AnyAsync(x => x.UserId == _http.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) && x.TargetId == post.Id);
-                post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId ==  post.Id);
+                    .AnyAsync(x => x.UserId == _http.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier) && x.TargetId == post.Id);
+                post.TempLikesCount = await _context.Likes.CountAsync(x => x.TargetId ==  post.Id && !x.ApplicationUser!.IsDeleted);
             }
 
             return myPosts;

@@ -20,7 +20,7 @@ namespace Blog_Website.Services
         {
             var currentUserId = _httpcontext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var users = await _context.Users.Where(x => x.Id != currentUserId).ToListAsync();
+            var users = await _context.Users.Where(x => x.Id != currentUserId && !x.IsDeleted).ToListAsync();
 
             return users;
         }

@@ -1,4 +1,5 @@
 ﻿using Blog_Website.Hubs;
+using Blog_Website.Middleware;
 using Blog_Website.Models.Data;
 using Blog_Website.Models.Entities;
 using Blog_Website.Services;
@@ -6,7 +7,6 @@ using Blog_Website.Services.IServices;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +66,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IViewRenderService, ViewRenderService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 
 
 var app = builder.Build();
@@ -87,7 +88,7 @@ app.MapHub<CommentHub>("/commentHub");
 app.MapHub<NotificationHub>("/notificationHub");
 
 app.UseAuthorization();
-
+app.UseMiddleware<DeleteAccountMiddleware>();
 
 app.MapStaticAssets();
 

@@ -5,6 +5,23 @@
 @{
     ViewData["Title"] = "Public Feed";
 }
+<div class="container mt-2">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link @(ViewBag.ActiveTab == "ForYou" ? "active" : "")"
+               href="/Home/Index">
+                For You
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link @(ViewBag.ActiveTab == "Private" ? "active" : "")"
+               href="/Home/FriendsPosts">
+                Private
+            </a>
+        </li>
+    </ul>
+</div>
 
 @* like modal to show user who liked the post *@
 <div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
@@ -33,22 +50,20 @@
                 <div class="card-header bg-white border-0 d-flex align-items-center">
                     <a href="/Profile/Profile?userId=@post.UserId">
                         <img src="@(string.IsNullOrEmpty(post.ApplicationUser?.ImageURL)
-                            ? Url.Content("~/images/profile/default.png")
-                            : Url.Content(post.ApplicationUser.ImageURL))"
+                             ? Url.Content("~/images/profile/default.png")
+                             : Url.Content(post.ApplicationUser.ImageURL))"
                              class="rounded-circle me-2"
                              style="width: 40px; height: 40px; object-fit: cover;" />
-
                     </a>
 
                     <div>
                         <strong>@post.ApplicationUser?.UserName</strong><br />
                         <small class="text-muted">@TimeFormatter.ToInstagramStyle(post.CreatedDate)</small>
                     </div>
-                    @if (post.UserId == User.FindFirst(ClaimTypes.NameIdentifier).Value)
+                    @if (post.UserId == User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
                     {
                         <div class="dropdown">
                             <button class="btn btn-light border-0" data-bs-toggle="dropdown">
-                                :::
                                 <i class="bi bi-three-dots"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
@@ -75,28 +90,52 @@
                 <div class="card-body">
                     @if (!string.IsNullOrWhiteSpace(post.Content))
                     {
-                        @* <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.Id"> *@
-                        <p class="card-text">@post.Content</p>
-                        @* </a> *@
+                        <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id"
+                           class="fw-semibold text-decoration-none text-dark">
+                            <p class="card-text">@post.Content</p>
+                        </a>
                     }
 
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div>
-                            <!-- زر الإعجاب -->
-                            <button class="btn btn-light btn-sm me-2 like-btn"
-                                    data-target-id="@post.Id"
-                                    data-target-type="Post">
-                                <i class="@(post.Likes.Any(l => l.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier)) ? "fa-solid fa-heart text-danger" : "fa-regular fa-heart")"></i>
-                                <span class="like-count">@post.TempLikesCount</span>
-                            </button>
 
-                            <!-- زر التعليق -->
-                            <button class="btn btn-light btn-sm comment-btn">
-                                <i class="fa-regular fa-comment"></i>
-                                Comment
-                            </button>
-                        </div>
+                    <!-- زر لفتح المودال -->
+                    <button class="btn btn-link p-0 open-likes-modal"
+                            data-post-id="@post.Id"
+                            data-bs-toggle="modal"
+                            data-bs-target="#likesModal">
+                        @post.TempLikesCount Likes
+                    </button>
+
+
+                    <div class="d-flex justify-content-start align-items-center mt-3">
+
+                        <!-- زر الإعجاب -->
+                        <button class="btn btn-light btn-sm me-3 like-btn"
+                                data-target-id="@post.Id"
+                                data-target-type="Post">
+                            @if (post.TempLikesCount > 0)
+                            {
+                                <i class="@(post.IsLikedByCurrentUser
+                                ? "fa-solid fa-heart text-danger"
+                                : "fa-regular fa-heart")"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-regular fa-heart"></i>
+                            }
+
+                            <span class="like-text">Like</span>
+                            <span class="like-count">@post.TempLikesCount</span>
+                        </button>
+
+                        <!-- زر التعليق -->
+                        <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id"
+                           class="fw-semibold text-decoration-none text-dark" class="btn btn-light btn-sm comment-btn">
+                            <i class="fa-regular fa-comment"></i>
+                            <span>Comment</span>
+                        </a>
+
                     </div>
+
                 </div>
             </div>
         }
@@ -109,7 +148,6 @@
         </div>
     }
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 @section Scripts {
     <script>
@@ -205,3 +243,4 @@
         });
     </script>
 }
+

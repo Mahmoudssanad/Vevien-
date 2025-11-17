@@ -1,5 +1,4 @@
-﻿using Blog_Website.Models.Entities;
-using Blog_Website.ViewModel.Profile;
+﻿using Blog_Website.ViewModel.Profile;
 using Microsoft.AspNetCore.Identity;
 
 namespace Blog_Website.Services.IServices
@@ -8,8 +7,10 @@ namespace Blog_Website.Services.IServices
     {
         Task<IdentityResult> ChangePassword(ChangePasswordViewModel model);
 
-        Task DeleteAsync(string userId);
+        Task<bool> SoftDeleteUserAsync(string userId);
 
         Task<List<ProfileViewModel>> GetAllAsync();
+
+        Task<ProfileViewModel> GetProfileAsync(string userId, string CurrentUserId);
     }
 }

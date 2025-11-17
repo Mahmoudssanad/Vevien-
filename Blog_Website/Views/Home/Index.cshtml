@@ -6,6 +6,24 @@
     ViewData["Title"] = "Public Feed";
 }
 
+<div class="container mt-2">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link @(ViewBag.ActiveTab == "ForYou" ? "active" : "")"
+               href="/Home/Index">
+                For You
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link @(ViewBag.ActiveTab == "Private" ? "active" : "")"
+               href="/Home/FriendsPosts">
+                Private
+            </a>
+        </li>
+    </ul>
+</div>
+
 @* like modal to show user who liked the post *@
 <div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -45,7 +63,7 @@
                         <strong>@post.ApplicationUser?.UserName</strong><br />
                         <small class="text-muted">@TimeFormatter.ToInstagramStyle(post.CreatedDate)</small>
                     </div>
-                    @if (post.UserId == User.FindFirst(ClaimTypes.NameIdentifier).Value)
+                    @if (post.UserId == User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
                     {
                         <div class="dropdown">
                             <button class="btn btn-light border-0" data-bs-toggle="dropdown">

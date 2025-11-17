@@ -5,6 +5,8 @@ using Blog_Website.Models.Data;
 using Microsoft.EntityFrameworkCore;
 using Blog_Website.Services.IServices;
 using Blog_Website.Enums;
+using Blog_Website.ViewModel.Account;
+using Hangfire;
 
 namespace Blog_Website.Services
 {
@@ -52,8 +54,14 @@ namespace Blog_Website.Services
             // بتحدد مين هيوصل ليه الايميل
             mail.To.Add(toEmail);
 
-            // هيبعت الرساله للايميل دا عبرا الانترنت 
-            await smtp.SendMailAsync(mail);
+            // هيبعت الرساله للايميل دا عبر الانترنت 
+            try
+            {
+                await smtp.SendMailAsync(mail);
+            }catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         public async Task AddAsync(OTP otp)
@@ -115,7 +123,8 @@ namespace Blog_Website.Services
         {
             var otp = new Random().Next(100000, 999999).ToString();
 
-            await SendEmailAsync(email, "Confirm your email", $"Welcome {userName}!<br>Your OTP is: <b>{otp}</b>");
+            // Hangfire Package => Exception علشان لو المستخدم مش متصل بالانترنت ميضربش 
+            BackgroundJob.Enqueue(() => SendEmailAsync(email, "Confirm your email", $"Welcome {userName}!<br>Your OTP is: <b>{otp}</b>"));
 
             var otpEntity = new OTP
             {
@@ -126,6 +135,27 @@ namespace Blog_Website.Services
             };
 
             await AddAsync(otpEntity);
+        }
+
+        public async Task<OtpResult> ResendOtpAsync(string email, OtpFlow otpFlow)
+        {
+            var otp = await _context.OTPs.Where(x => x.Email == email && !x.IsUsed)
+                .OrderByDescending(x => x.ExpiryTime)
+                .FirstOrDefaultAsync();
+
+            if(otp == null) 
+                return OtpResult.Failed("No valid OTP found for this email.");
+
+            otp.Code = new Random().Next(100000, 999999).ToString();
+            otp.ExpiryTime = DateTime.UtcNow.AddMinutes(2);
+            otp.IsUsed = false;
+
+            await UpdateAsync(otp);
+
+            BackgroundJob.Enqueue(() => SendEmailAsync(email, "Resend verification code",
+                                $"Your verification code is: {otp.Code}"));
+
+            return OtpResult.SuccessResponse("OTP resent successfully.");
         }
     }
 }

@@ -24,15 +24,15 @@ namespace Blog_Website.Services
             var exists = await _context.Follows
                 .Include(x => x.Following)
                 .Include(x => x.Follower)
-                .AnyAsync(x => x.FollowerId == followerId && x.FollowingId == followingId);
+                .AnyAsync(x => x.FollowerId == followingId && x.FollowingId == followerId);
 
             if (exists) return;
 
             var newFollow = new Follow
             {
                 CreatedDate = DateTime.Now,
-                FollowerId = followerId,
-                FollowingId = followingId
+                FollowerId = followingId,
+                FollowingId = followerId
             };
             try
             {
@@ -63,7 +63,7 @@ namespace Blog_Website.Services
         public async Task UnfollowAsync(string followerId, string followingId)
         {
             var foundFollowing = await _context.Follows.FirstOrDefaultAsync(x =>
-                x.FollowingId == followingId && x.FollowerId == followerId);
+                x.FollowingId == followerId && x.FollowerId == followingId);
 
             if (foundFollowing == null)
                 throw new Exception("There is no following");
@@ -74,22 +74,22 @@ namespace Blog_Website.Services
 
         public async Task<int> FollowersCountAsync(string userId)
         {
-            //var followersCount = await _context.Follows
-            //    .Where(x => x.FollowingId == userId)
-            //    .CountAsync();
+            var followersCount = await _context.Follows
+                .Where(x => x.FollowingId == userId && !x.Follower!.IsDeleted)
+                .CountAsync();
 
-            var followersCount = await _context.Follows.CountAsync(x => x.FollowingId == userId);
+            //var followersCount = await _context.Follows.CountAsync(x => x.FollowingId == userId);
 
             return followersCount;
         }
 
         public async Task<int> FollowingCountAsync(string userId)
         {
-            //var followingCount = await _context.Follows
-            //    .Where(x => x.FollowerId == userId)
-            //    .CountAsync();
+            var followingCount = await _context.Follows
+                .Where(x => x.FollowerId == userId && !x.Following!.IsDeleted)
+                .CountAsync();
 
-            var followingCount = await _context.Follows.CountAsync(x => x.FollowerId == userId);
+            //var followingCount = await _context.Follows.CountAsync(x => x.FollowerId == userId);
 
             return followingCount;
         }
@@ -97,26 +97,26 @@ namespace Blog_Website.Services
         public async Task<List<ApplicationUser>> GetFollowersAsync(string userId)
         {
             var followers = await _context.Follows
-                .Where(x => x.FollowingId == userId)
+                .Where(x => x.FollowingId == userId && !x.Follower!.IsDeleted)
                 .Select(x => x.Follower)
                 .ToListAsync();
 
-            return followers;
+            return followers!;
         }
 
         public async Task<List<ApplicationUser>> GetFollowingsAsync(string userId)
         {
             var following = await _context.Follows
-                .Where(x => x.FollowerId == userId)
+                .Where(x => x.FollowerId == userId && !x.Following!.IsDeleted)
                 .Select(x => x.Following)
                 .ToListAsync();
 
-            return following;
+            return following!;
         }
 
         public async Task<bool> IsFollowingAsync(string followerId, string followedId)
         {
-            var result = await _context.Follows.AnyAsync(x => x.FollowingId == followedId && x.FollowerId == followerId);
+            var result = await _context.Follows.AnyAsync(x => x.FollowingId == followerId && x.FollowerId == followedId);
 
             return result;
         }

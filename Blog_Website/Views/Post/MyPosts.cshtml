@@ -4,26 +4,74 @@
 @{
     ViewData["Title"] = "My Posts";
 }
+<style>
+    .post-card {
+        border-radius: 20px;
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: 0.25s ease;
+    }
 
-<!-- 🔹 Modal to show who liked the post -->
+        .post-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+
+    .post-image {
+        border-radius: 18px;
+        object-fit: cover;
+        width: 100%;
+        max-height: 450px;
+        transition: 0.3s ease;
+    }
+
+        .post-image:hover {
+            transform: scale(1.02);
+        }
+
+    .post-menu-btn {
+        background: #f8f9fa;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .action-btn {
+        border-radius: 12px;
+        background: #f8f9fa;
+        transition: .2s;
+    }
+
+        .action-btn:hover {
+            background: #e9ecef;
+        }
+
+    .likes-btn:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<!-- Likes Modal -->
 <div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold" id="likesModalLabel">Liked by</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold">Liked by</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0">
-                <ul id="likesList" class="list-group list-group-flush">
-                    <!-- Users will be injected here -->
-                </ul>
+                <ul id="likesList" class="list-group list-group-flush"></ul>
             </div>
         </div>
     </div>
 </div>
 
-
 <div class="container mt-4 mb-5" style="max-width: 650px;">
+
     @if (Model == null || !Model.Any())
     {
         <div class="alert alert-info text-center shadow-sm">
@@ -34,73 +82,60 @@
     {
         foreach (var post in Model)
         {
-            <div class="card mb-4 shadow-sm rounded-3 border-0">
-                <div class="card-body">
-                    <!-- 🔹 Header (User + Menu) -->
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        @if (post.UserId == User.FindFirst(ClaimTypes.NameIdentifier).Value)
-                        {
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-light border-0" data-bs-toggle="dropdown">
-                                    <i class="bi bi-three-dots"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "Post", new { postId = post.Id })">Edit</a></li>
-                                    <li><a class="dropdown-item text-danger" href="@Url.Action("Delete", "Post", new { postId = post.Id })">Delete</a></li>
-                                </ul>
-                            </div>
-                        }
-                    </div>
+            <div class="post-card card p-3 mb-4">
 
-                    <!-- 🔹 Post Image -->
-                    @if (!string.IsNullOrEmpty(post.ImageUrl))
+                <!-- Header -->
+                <div class="d-flex justify-content-end mb-2">
+                    @if (post.UserId == User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
                     {
-                        <div class="mb-3">
-                            <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id"
-                               class="fw-semibold text-decoration-none text-dark">
-                                <img src="@post.ImageUrl"
-                                     alt="Post Image"
-                                     class="img-fluid rounded-3"
-                                     style="width: 100%; object-fit: cover; max-height: 450px;">
-                            </a>
+                        <div class="dropdown">
+                            <button class="post-menu-btn border-0" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Post", new { postId = post.Id })">Edit</a></li>
+                                <li><a class="dropdown-item text-danger" href="@Url.Action("Delete", "Post", new { postId = post.Id })">Delete</a></li>
+                            </ul>
                         </div>
                     }
+                </div>
 
-                    <!-- 🔹 Post Content -->
-                    @if (!string.IsNullOrEmpty(post.Content))
-                    {
-                        <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id"
-                               class="fw-semibold text-decoration-none text-dark">
-                        <p class="mb-3">@post.Content</p>
-                        </a>
-                    }
+                <!-- Image -->
+                @if (!string.IsNullOrEmpty(post.ImageUrl))
+                {
+                    <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id">
+                        <img src="@post.ImageUrl" class="post-image mb-3" />
+                    </a>
+                }
 
-                    <!-- 🔹 Likes Counter -->
-                    <button class="btn btn-link text-decoration-none p-0 mb-2 open-likes-modal"
-                            data-post-id="@post.Id"
-                            data-bs-toggle="modal"
-                            data-bs-target="#likesModal">
-                        <small class="text-muted fw-semibold">
-                            <i class="fa-solid fa-heart text-danger me-1"></i> @post.TempLikesCount Likes
-                        </small>
+                <!-- Content -->
+                @if (!string.IsNullOrEmpty(post.Content))
+                {
+                    <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id" class="text-dark text-decoration-none">
+                        <p class="mb-3 fs-6">@post.Content</p>
+                    </a>
+                }
+
+                <!-- Likes -->
+                <button class="btn btn-link text-muted p-0 mb-2 open-likes-modal likes-btn"
+                        data-post-id="@post.Id" data-bs-toggle="modal" data-bs-target="#likesModal">
+                    <i class="fa-solid fa-heart text-danger me-1"></i>
+                    @post.TempLikesCount Likes
+                </button>
+
+                <!-- Actions -->
+                <div class="d-flex border-top pt-3 mt-2">
+
+                    <button class="btn action-btn btn-sm me-3 px-3 like-btn"
+                            data-target-id="@post.Id" data-target-type="Post">
+                        <i class="@(post.IsLikedByCurrentUser ? "fa-solid fa-heart text-danger" : "fa-regular fa-heart") me-1"></i>
+                        <span class="like-count">@post.TempLikesCount</span>
                     </button>
 
-                    <!-- 🔹 Actions (Like / Comment) -->
-                    <div class="d-flex justify-content-start align-items-center border-top pt-3 mt-2">
-                        <button class="btn btn-light btn-sm me-3 px-3 like-btn"
-                                data-target-id="@post.Id"
-                                data-target-type="Post">
-                            <i class="@(post.IsLikedByCurrentUser ? "fa-solid fa-heart text-danger" : "fa-regular fa-heart") me-1"></i>
-                            <span class="like-text">Like</span>
-                            <span class="like-count ms-1">@post.TempLikesCount</span>
-                        </button>
-
-                        <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id"
-                           class="btn btn-light btn-sm px-3 fw-semibold">
-                            <i class="fa-regular fa-comment me-1"></i>
-                            Comment
-                        </a>
-                    </div>
+                    <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id"
+                       class="btn action-btn btn-sm px-3 fw-semibold">
+                        <i class="fa-regular fa-comment me-1"></i> Comment
+                    </a>
                 </div>
             </div>
         }
@@ -113,7 +148,7 @@
     <script>
         $(document).ready(function () {
 
-            // 🧩 تحميل المستخدمين داخل المودال
+            // 🧩 تحميل اللايكات داخل المودال
             function loadLikes(postId) {
                 const likesList = $("#likesList");
                 likesList.empty();
@@ -149,13 +184,15 @@
                 });
             }
 
+
             // 🎯 فتح المودال
             $(document).on("click", ".open-likes-modal", function () {
                 const postId = $(this).data("post-id");
                 loadLikes(postId);
             });
 
-            // ❤️ اللايك
+
+            // ❤️ زر اللايك
             $(document).on("click", ".like-btn", function (e) {
                 e.preventDefault();
 
@@ -166,12 +203,10 @@
                 $.ajax({
                     type: "POST",
                     url: "/Like/Toggle",
-                    data: {
-                        TargetId: postId,
-                        TargetType: targetType
-                    },
+                    data: { TargetId: postId, TargetType: targetType },
                     success: function (response) {
                         if (response.success) {
+
                             const icon = button.find("i");
                             const count = button.find(".like-count");
 
@@ -182,15 +217,18 @@
                                 icon.removeClass("fa-solid text-danger").addClass("fa-regular");
                             }
 
-                            // 🔢 تحديث العدد في الزر
+                            // 🔢 تحديث العدد داخل الزر
                             count.text(response.count);
 
-                            // 🔢 تحديث عدد اللايكات فوق
-                            $(`.open-likes-modal[data-post-id='${postId}']`).html(
-                                `<small class="text-muted fw-semibold"><i class="fa-solid fa-heart text-danger me-1"></i> ${response.count} Likes</small>`
-                            );
+                            // 🔢 تحديث عدد اللايكات فوق البوست
+                            $(`.open-likes-modal[data-post-id='${postId}']`).html(`
+                                <small class="text-muted fw-semibold">
+                                    <i class="fa-solid fa-heart text-danger me-1"></i>
+                                    ${response.count} Likes
+                                </small>
+                            `);
 
-                            // ✅ تحديث المودال لو مفتوح
+                            // 🟢 تحديث المودال لو مفتوح
                             if ($("#likesModal").hasClass("show")) {
                                 loadLikes(postId);
                             }
@@ -198,6 +236,7 @@
                     }
                 });
             });
+
         });
     </script>
 }

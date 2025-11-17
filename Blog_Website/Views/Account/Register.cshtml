@@ -1,5 +1,4 @@
 ﻿@using Blog_Website.Enums
-
 @model AccountViewModel
 
 @{
@@ -11,85 +10,132 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/Blog_System.styles.css" asp-append-version="true" />
 
-<div class="d-flex justify-content-center align-items-center vh-100">
-    <div class="card shadow-lg p-4 rounded-3" style="width: 500px;">
-        <h3 class="text-center mb-4">Create a New Account</h3>
+<style>
+    body {
+        background: #f5f6fa;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-        <form asp-action="Register" method="post" class="needs-validation" novalidate>
-            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    .auth-card {
+        width: 520px;
+        background: #fff;
+        padding: 35px;
+        border-radius: 14px;
+        box-shadow: 0 4px 22px rgba(0,0,0,0.12);
+    }
 
-            <div class="mb-3">
-                <label asp-for="UserName" class="form-label fw-semibold"></label>
-                <input asp-for="UserName" class="form-control" />
-                <span asp-validation-for="UserName" class="text-danger"></span>
-            </div>
+    .auth-title {
+        font-size: 28px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 10px;
+        color: #222;
+    }
 
-            <div class="mb-3">
-                <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
-                <input asp-for="PhoneNumber" class="form-control" />
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            </div>
+    .auth-subtitle {
+        font-size: 14px;
+        text-align: center;
+        color: #555;
+        margin-bottom: 25px;
+    }
 
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label fw-semibold"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
+    .btn-custom {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+    }
 
-            <div class="mb-3">
-                <label asp-for="Address" class="form-label fw-semibold"></label>
-                <input asp-for="Address" class="form-control" />
-                <span asp-validation-for="Address" class="text-danger"></span>
-            </div>
+    .form-label {
+        font-weight: 600 !important;
+    }
+</style>
 
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label asp-for="Birthdate" class="form-label fw-semibold"></label>
-                    <input asp-for="Birthdate" type="date" class="form-control" />
-                    <span asp-validation-for="Birthdate" class="text-danger"></span>
-                </div>
 
-                <div class="col-md-6">
-                    <label asp-for="Gender" class="form-label fw-semibold"></label>
-                    <select asp-for="Gender" class="form-select"
-                            asp-items="Html.GetEnumSelectList<GenderEnum>()">
-                        <option value="">-- Select Gender --</option>
-                    </select>
-                    <span asp-validation-for="Gender" class="text-danger"></span>
-                </div>
-            </div>
+<div class="auth-card">
+    <h2 class="auth-title">Create Account</h2>
+    <p class="auth-subtitle">Join us and start your journey today.</p>
 
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label fw-semibold"></label>
-                <input asp-for="Password" type="password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
+    <form asp-action="Register" method="post" class="needs-validation" novalidate>
 
-            <div class="mb-3">
-                <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
-                <input asp-for="ConfirmPassword" type="password" class="form-control" />
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-            </div>
+        <div asp-validation-summary="All" class="text-danger mb-3 text-center"></div>
 
-            <div class="mb-3 form-check text-start">
-                <input class="form-check-input" asp-for="RememberMe" />
-                <label class="form-check-label" asp-for="RememberMe"></label>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Create</button>
-        </form>
-
-        <div class="text-center mt-3">
-            <p class="mb-0">
-                Already have an account?
-                <a asp-action="Login" class="text-decoration-none">Login</a>
-            </p>
+        <div class="mb-3">
+            <label asp-for="UserName" class="form-label"></label>
+            <input asp-for="UserName" class="form-control" placeholder="Enter your username" />
+            <span asp-validation-for="UserName" class="text-danger"></span>
         </div>
+
+        <div class="mb-3">
+            <label asp-for="PhoneNumber" class="form-label"></label>
+            <input asp-for="PhoneNumber" class="form-control" placeholder="Enter phone number" />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" placeholder="Enter email address" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Address" class="form-label"></label>
+            <input asp-for="Address" class="form-control" placeholder="Your address" />
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="Birthdate" class="form-label"></label>
+                <input asp-for="Birthdate" type="date" class="form-control" />
+                <span asp-validation-for="Birthdate" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Gender" class="form-label"></label>
+                <select asp-for="Gender" class="form-select"
+                        asp-items="Html.GetEnumSelectList<GenderEnum>()">
+                    <option value="">-- Select Gender --</option>
+                </select>
+                <span asp-validation-for="Gender" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ConfirmPassword" class="form-label"></label>
+            <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm password" />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+        </div>
+
+        <div class="form-check mb-3">
+            <input asp-for="RememberMe" class="form-check-input" />
+            <label asp-for="RememberMe" class="form-check-label"></label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-custom">Create Account</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <p class="mb-0">
+            Already have an account?
+            <a asp-action="Login" class="text-decoration-none">Login</a>
+        </p>
     </div>
 </div>
 
 
-<script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
 

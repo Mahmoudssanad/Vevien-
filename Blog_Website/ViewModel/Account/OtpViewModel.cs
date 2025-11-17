@@ -10,6 +10,7 @@ namespace Blog_Website.ViewModel.Account
 
         [Required]
         public string? Otp { get; set; }
+
         public OtpFlow Flow { get; set; }
     }
 }
