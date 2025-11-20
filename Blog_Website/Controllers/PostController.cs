@@ -1,19 +1,22 @@
 ﻿using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
 using Blog_Website.ViewModel.Post;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog_Website.Controllers
 {
+    //[Authorize]
     public class PostController : Controller
     {
         private readonly IPostService _postService;
-     
-        public PostController(IPostService postService)
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public PostController(IPostService postService, UserManager<ApplicationUser> userManager)
         {
             _postService = postService;
-            
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -44,7 +47,7 @@ namespace Blog_Website.Controllers
 
             foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
             {
-                Console.WriteLine(error.ErrorMessage);
+                ModelState.AddModelError("", error.ErrorMessage);
             }
             return View(model);
         }
@@ -100,10 +103,18 @@ namespace Blog_Website.Controllers
         [HttpGet]
         public async Task<IActionResult> MyPosts(string userId)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
 
-            var myPosts = await _postService.MyPosts(userId);
+            if(currentUser == null) return Unauthorized();
 
-            return View(myPosts);
+            List<PostViewModel> myPosts;
+
+            if (userId == currentUser.Id)
+                myPosts = await _postService.MyPosts(userId);
+            else
+                myPosts = await _postService.GetAllUserPostsAsync(userId);
+
+                return View(myPosts);
         }
 
     }

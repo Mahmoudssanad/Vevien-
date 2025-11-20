@@ -278,7 +278,7 @@ namespace Blog_Website.Migrations
                         column: x => x.PostId,
                         principalTable: "Posts",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(

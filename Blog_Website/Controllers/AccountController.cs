@@ -41,7 +41,7 @@ namespace Blog_Website.Controllers
 
             var emailExseting = await _userManager.FindByEmailAsync(model.Email!);
 
-            if(emailExseting is not null)
+            if(emailExseting is not null && !emailExseting.IsDeleted)
             {
                 ModelState.AddModelError("", "Email already exist");
                 return View(model);

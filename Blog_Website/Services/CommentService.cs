@@ -29,7 +29,7 @@ namespace Blog_Website.Services
             {
                 UserId = model.UserId,
                 Content = model.Content,
-                CreatedDate = DateTime.Now,
+                CreatedDate = DateTime.UtcNow,
                 PostId = model.PostId,
             };
 

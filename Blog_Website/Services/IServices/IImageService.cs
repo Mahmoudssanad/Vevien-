@@ -4,6 +4,8 @@
     {
         Task<string> UploadProfileImageAsync(IFormFile image);
 
+        Task<string> UploadPostImageAsync(IFormFile image);
+
         void DeleteImage(string imagePath);
     }
 }

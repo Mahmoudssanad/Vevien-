@@ -124,7 +124,7 @@ namespace Blog_Website.Services
             var otp = new Random().Next(100000, 999999).ToString();
 
             // Hangfire Package => Exception علشان لو المستخدم مش متصل بالانترنت ميضربش 
-            BackgroundJob.Enqueue(() => SendEmailAsync(email, "Confirm your email", $"Welcome {userName}!<br>Your OTP is: <b>{otp}</b>"));
+            await SendEmailAsync(email, "Confirm your email", $"Welcome {userName}!<br>Your OTP is: <b>{otp}</b>");
 
             var otpEntity = new OTP
             {
@@ -152,8 +152,8 @@ namespace Blog_Website.Services
 
             await UpdateAsync(otp);
 
-            BackgroundJob.Enqueue(() => SendEmailAsync(email, "Resend verification code",
-                                $"Your verification code is: {otp.Code}"));
+            await SendEmailAsync(email, "Resend verification code",
+                                $"Your verification code is: {otp.Code}");
 
             return OtpResult.SuccessResponse("OTP resent successfully.");
         }

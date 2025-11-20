@@ -40,6 +40,11 @@ namespace Blog_Website.Models.Data
             .HasIndex(f => new { f.FollowerId, f.FollowingId })
             .IsUnique();
 
+            builder.Entity<Comment>()
+            .HasOne(c => c.Post)
+            .WithMany(p => p.Comments)
+            .OnDelete(DeleteBehavior.Cascade);
+
 
             // when two foreign key for the same table
             builder.Entity<Notification>()

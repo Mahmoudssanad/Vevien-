@@ -7,23 +7,31 @@ namespace Blog_Website.Middleware
     {
         private readonly RequestDelegate _next;
 
+        // Middleware => Singlton وال Scoped لانهم UserManager, SinInManager لل dependancy injection معملناش 
+        // نفسه HttpContext من ال UserManager علشان كدا اخدنا ال 
         public DeleteAccountMiddleware(RequestDelegate next)
         {
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext httpContext, UserManager<ApplicationUser> _userManager, SignInManager<ApplicationUser> _signInManager)
+        public async Task InvokeAsync(HttpContext httpContext)
         {
-            if (httpContext.User.Identity!.IsAuthenticated)
+            var _userManager = httpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+            var _signInManager = httpContext.RequestServices.GetRequiredService<SignInManager<ApplicationUser>>();
+
+
+            if (httpContext.User.Identity?.IsAuthenticated == true)
             {
                 var user = await _userManager.GetUserAsync(httpContext.User);
-                if (user!.IsDeleted && user is not null)
+
+                if (user != null && user.IsDeleted)
                 {
                     await _signInManager.SignOutAsync();
                     httpContext.Response.Redirect("/Account/Login");
                     return;
                 }
-            }            
+            }
+
             await _next(httpContext); // move to next middleware
         }
 

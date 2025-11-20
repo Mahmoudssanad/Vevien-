@@ -54,6 +54,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 builder.Services.AddSignalR();
 
+
+
 // Register some services
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
@@ -80,6 +82,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // display image when deploy
 app.UseSession();
 app.UseRateLimiter();
 app.UseRouting();

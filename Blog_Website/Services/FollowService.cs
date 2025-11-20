@@ -30,7 +30,7 @@ namespace Blog_Website.Services
 
             var newFollow = new Follow
             {
-                CreatedDate = DateTime.Now,
+                CreatedDate = DateTime.UtcNow,
                 FollowerId = followingId,
                 FollowingId = followerId
             };

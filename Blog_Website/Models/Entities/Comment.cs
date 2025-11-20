@@ -10,7 +10,7 @@ namespace Blog_Website.Models.Entities
 
         public string? ImageUrl { get; set; }
 
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedDate { get; set; }
 
         [ForeignKey("ApplicationUser")]

@@ -5,45 +5,45 @@
 
 <style>
     .profile-header {
-        background: linear-gradient(135deg, #4c6ef5, #15aabf);
-        border-radius: 20px;
-        padding: 2rem;
-        color: white;
+    background: linear-gradient(135deg, #4c6ef5, #15aabf);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
     }
 
     .profile-img {
-        width: 140px;
-        height: 140px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 4px solid #fff;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
     }
 
     .stats-box {
-        border-radius: 15px;
-        padding: 1.2rem;
-        background: #fff;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.06);
-        transition: 0.2s ease;
+    border-radius: 15px;
+    padding: 1.2rem;
+    background: #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    transition: 0.2s ease;
     }
 
-        .stats-box:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.1);
-        }
+    .stats-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+    }
 
     .gallery img {
-        aspect-ratio: 1 / 1;
-        object-fit: cover;
-        border-radius: 12px;
-        transition: 0.2s ease;
-        box-shadow: 0px 3px 8px rgba(0,0,0,0.08);
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 12px;
+    transition: 0.2s ease;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.08);
     }
 
-        .gallery img:hover {
-            transform: scale(1.03);
-        }
+    .gallery img:hover {
+    transform: scale(1.03);
+    }
 </style>
 
 <div class="container py-5">
@@ -53,7 +53,10 @@
         <div class="d-flex justify-content-center mb-3">
 
             <!-- Profile Image -->
-            <img src="@(Model.Image ?? "~/images/profile/default.png")" class="profile-img" alt="@Model.UserName">
+            <img src="@(string.IsNullOrEmpty(Model.Image)
+                                ? Url.Content("~/images/profile/default.png")
+                                : Url.Content(Model.Image))"
+            class="profile-img" alt="@Model.UserName">
         </div>
 
         <h2 class="fw-bold">@Model.UserName</h2>
@@ -69,7 +72,7 @@
             @if (User.Identity!.IsAuthenticated && Model.IsOwner)
             {
                 <a asp-action="Edit" asp-controller="Profile" asp-route-userId="@Model.UserId"
-                   class="btn btn-light px-4 fw-semibold">
+                class="btn btn-light px-4 fw-semibold">
                     Edit Profile
                 </a>
             }
@@ -79,14 +82,14 @@
                     @if (Model.IsFollow)
                     {
                         <button id="unfollow-btn" data-user-id="@Model.UserId"
-                                class="btn btn-outline-light px-4 fw-semibold">
+                        class="btn btn-outline-light px-4 fw-semibold">
                             Unfollow
                         </button>
                     }
                     else
                     {
                         <button id="follow-btn" data-user-id="@Model.UserId"
-                                class="btn btn-dark px-4 fw-semibold">
+                        class="btn btn-dark px-4 fw-semibold">
                             Follow
                         </button>
                     }

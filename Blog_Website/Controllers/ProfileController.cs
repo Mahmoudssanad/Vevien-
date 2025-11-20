@@ -32,7 +32,10 @@ namespace Blog_Website.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
-            var profile = await _profileService.GetProfileAsync(userId, currentUser!.Id);
+            if (currentUser == null)
+                return RedirectToAction("Login", "Account");
+
+            var profile = await _profileService.GetProfileAsync(userId, currentUser.Id);
 
             if (profile == null)
                 return NotFound();
