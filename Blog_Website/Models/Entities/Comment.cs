@@ -19,7 +19,7 @@ namespace Blog_Website.Models.Entities
 
         [ForeignKey("Post")]
         public int PostId { get; set; }
-        public Post? Post { get; set; }
+        public DesplayPostViewModel? Post { get; set; }
 
         [NotMapped]
         public ICollection<Like> Likes { get; set; } = new List<Like>();

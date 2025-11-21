@@ -1,28 +1,11 @@
 ﻿@using System.Security.Claims
 @using Blog_Website.Helpers
-@model IEnumerable<Post>
+@using Blog_Website.ViewModel.Posts
+@model IEnumerable<DisplayPostViewModel>
 
 @{
     ViewData["Title"] = "Public Feed";
 }
-
-<div class="container mt-2">
-    <ul class="nav nav-tabs">
-        <li class="nav-item">
-            <a class="nav-link @(ViewBag.ActiveTab == "ForYou" ? "active" : "")"
-               href="/Home/Index">
-                For You
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link @(ViewBag.ActiveTab == "Private" ? "active" : "")"
-               href="/Home/FriendsPosts">
-                Private
-            </a>
-        </li>
-    </ul>
-</div>
 
 @* like modal to show user who liked the post *@
 <div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
@@ -51,16 +34,16 @@
                 <!-- Header: user info -->
                 <div class="card-header bg-white border-0 d-flex align-items-center">
                     <a href="/Profile/Profile?userId=@post.UserId">
-                        <img src="@(string.IsNullOrEmpty(post.ApplicationUser?.ImageURL)
+                        <img src="@(string.IsNullOrEmpty(post.User?.ImageURL)
                              ? Url.Content("~/images/profile/default.png")
-                             : Url.Content(post.ApplicationUser.ImageURL))"
+                             : Url.Content(post.User.ImageURL))"
                         class="rounded-circle me-2"
                         style="width: 40px; height: 40px; object-fit: cover;" />
 
                     </a>
 
                     <div>
-                        <strong>@post.ApplicationUser?.UserName</strong><br />
+                        <strong>@post.User?.UserName</strong><br />
                         <small class="text-muted">@TimeFormatter.ToInstagramStyle(post.CreatedDate)</small>
                     </div>
                     @if (post.UserId == User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
@@ -70,8 +53,8 @@
                                 <i class="bi bi-three-dots"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Post", new { postId = post.Id })">Edit</a></li>
-                                <li><a class="dropdown-item text-danger" href="@Url.Action("Delete", "Post", new { postId = post.Id })">Delete</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Post", new { postId = post.PostId })">Edit</a></li>
+                                <li><a class="dropdown-item text-danger" href="@Url.Action("Delete", "Post", new { postId = post.PostId })">Delete</a></li>
                             </ul>
                         </div>
                     }
@@ -81,7 +64,7 @@
                 <!-- Post Image -->
                 @if (!string.IsNullOrEmpty(post.ImageUrl))
                 {
-                    <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.Id">
+                    <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.PostId">
                         <img src="@post.ImageUrl"
                         class="img-fluid"
                         alt="Post image"
@@ -94,7 +77,7 @@
                 <div class="card-body">
                     @if (!string.IsNullOrWhiteSpace(post.Content))
                     {
-                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.Id"
+                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.PostId"
                            class="fw-semibold text-decoration-none text-dark">
                         <p class="card-text">@post.Content</p>
                         </a>
@@ -103,7 +86,7 @@
 
                     <!-- زر لفتح المودال -->
                     <button class="btn btn-link p-0 open-likes-modal"
-                    data-post-id="@post.Id"
+                    data-post-id="@post.PostId"
                     data-bs-toggle="modal"
                     data-bs-target="#likesModal">
                         @post.TempLikesCount Likes
@@ -114,7 +97,7 @@
 
                         <!-- زر الإعجاب -->
                         <button class="btn btn-light btn-sm me-3 like-btn"
-                        data-target-id="@post.Id"
+                        data-target-id="@post.PostId"
                         data-target-type="Post">
                             @if(post.TempLikesCount > 0)
                             {
@@ -132,7 +115,7 @@
                         </button>
 
                         <!-- زر التعليق -->
-                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.Id"
+                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.PostId"
                            class="fw-semibold text-decoration-none text-dark" class="btn btn-light btn-sm comment-btn">
                             <i class="fa-regular fa-comment"></i>
                             <span>Comment</span>

@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using Blog_Website.Models;
+using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog_Website.Controllers
@@ -11,27 +13,23 @@ namespace Blog_Website.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IPostService _postService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public HomeController(ILogger<HomeController> logger, IPostService postService)
+        public HomeController(ILogger<HomeController> logger, IPostService postService, UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _postService = postService;
+            _userManager = userManager;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var allPublicPosts = await _postService.GetPublicPosts();
-            ViewBag.ActiveTab = "ForYou";
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return Unauthorized();
 
-            return View(allPublicPosts);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> FriendsPosts()
-        {
-            var friendsPosts = await _postService.GetFriendsPosts();
-            ViewBag.ActiveTab = "Private";
+            var friendsPosts = await _postService.GetFriendsPosts(currentUser.Id);
 
             return View(friendsPosts);
         }

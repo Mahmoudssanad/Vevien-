@@ -119,13 +119,9 @@ namespace Blog_Website.Services
             }
 
             // Post
-            var posts = isOwner ?
-                await _postService.MyPosts(userId) :
-                await _postService.GetAllUserPostsAsync(userId);
+            var posts = await _postService.GallaryPosts(userId, currentUserId);
 
-            var postsCount = isOwner ?
-                await _postService.MyPostsCount(userId) :
-                await _postService.VisiblePostsCount(userId);
+            var postsCount = await _postService.PostsCount(userId, currentUserId);
 
             // Follow
             var isFollow = await _followService.IsFollowingAsync(userId, currentUserId);

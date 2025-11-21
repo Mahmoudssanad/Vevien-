@@ -1,5 +1,5 @@
 ﻿using Blog_Website.Models.Entities;
-using Blog_Website.ViewModel.Post;
+using Blog_Website.ViewModel.Posts;
 using System.ComponentModel.DataAnnotations;
 
 namespace Blog_Website.ViewModel.Profile

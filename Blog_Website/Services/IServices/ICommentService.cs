@@ -1,5 +1,5 @@
 ﻿using Blog_Website.Models.Entities;
-using Blog_Website.ViewModel.Comment;
+using Blog_Website.ViewModel.Comments;
 
 namespace Blog_Website.Services.IServices
 {

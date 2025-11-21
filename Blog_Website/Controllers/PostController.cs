@@ -1,13 +1,14 @@
-﻿using Blog_Website.Models.Entities;
+﻿using Blog_Website.Generics;
+using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
-using Blog_Website.ViewModel.Post;
+using Blog_Website.ViewModel.Posts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog_Website.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class PostController : Controller
     {
         private readonly IPostService _postService;
@@ -32,17 +33,8 @@ namespace Blog_Website.Controllers
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    await _postService.AddAsync(model);
-
-
-                    return RedirectToAction("Index", "Home");
-                }
-                catch
-                {
-                    ModelState.AddModelError("", "Can not share empty post");
-                }
+                await _postService.AddAsync(model);
+                return RedirectToAction("Index", "Home");
             }
 
             foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
@@ -55,7 +47,11 @@ namespace Blog_Website.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int postId)
         {
-            var post = await _postService.GetByIdAsync(postId);
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return Unauthorized();
+
+            var post = await _postService.GetByIdAsync(postId, currentUser.Id);
 
             var currentPost = new PostViewModel
             {
@@ -63,7 +59,7 @@ namespace Blog_Website.Controllers
                 Public = post.Public,
                 Visible = post.Visible,
                 ImageUrl = post.ImageUrl,
-                Id = post.Id
+                Id = post.PostId
             };
 
             return View(currentPost);
@@ -93,28 +89,30 @@ namespace Blog_Website.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int postId)
         {
-            var post = await _postService.GetByIdAsync(postId);
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return Unauthorized();
 
-            if (post == null) return NotFound();
+            var post = await _postService.GetByIdAsync(postId, currentUser.Id);
+            if (post == null) 
+                return NotFound();
 
             return View(post);
         }
 
         [HttpGet]
-        public async Task<IActionResult> MyPosts(string userId)
+        public async Task<IActionResult> UserPosts(string userId, int pageSize = 3, int pageNumber = 1)
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
             if(currentUser == null) return Unauthorized();
 
-            List<PostViewModel> myPosts;
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 3;
 
-            if (userId == currentUser.Id)
-                myPosts = await _postService.MyPosts(userId);
-            else
-                myPosts = await _postService.GetAllUserPostsAsync(userId);
+             var posts = await _postService.GetAllUserPostsAsync(userId, currentUser.Id, pageSize, pageNumber);
 
-                return View(myPosts);
+                return View(posts);
         }
 
     }

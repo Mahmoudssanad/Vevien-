@@ -1,8 +1,9 @@
 ﻿@using System.Security.Claims
-@model List<Blog_Website.ViewModel.Post.PostViewModel>
+@using Blog_Website.Generics
+@model PageResult<Blog_Website.ViewModel.Posts.PostViewModel>
 
 @{
-    ViewData["Title"] = "My Posts";
+    ViewData["Title"] = "User Posts";
 }
 <style>
     .post-card {
@@ -72,7 +73,7 @@
 
 <div class="container mt-4 mb-5" style="max-width: 650px;">
 
-    @if (Model == null || !Model.Any() )
+    @if (Model == null || !Model.Items.Any() )
     {
         <div class="alert alert-info text-center shadow-sm">
             You haven’t posted anything yet.
@@ -80,7 +81,7 @@
     }
     else
     {
-        foreach (var post in Model)
+        foreach (var post in Model.Items)
         {
             <div class="post-card card p-3 mb-4">
 
@@ -140,6 +141,39 @@
                 
             </div>
         }
+        <!-- Pagination -->
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+
+                <!-- Previous -->
+                <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
+                    <a class="page-link"
+                       href="@Url.Action("UserPosts", new { userId = Model.UserId, pageNumber = Model.PageNumber - 1, pageSize = Model.PageSize })">
+                        Previous
+                    </a>
+                </li>
+
+                <!-- Page Numbers -->
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link"
+                           href="@Url.Action("UserPosts", new { userId = Model.UserId, pageNumber = i, pageSize = Model.PageSize })">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                <!-- Next -->
+                <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link"
+                       href="@Url.Action("UserPosts", new { userId = Model.UserId, pageNumber = Model.PageNumber + 1, pageSize = Model.PageSize })">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
     }
 </div>
 

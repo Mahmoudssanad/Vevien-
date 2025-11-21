@@ -15,7 +15,7 @@ namespace Blog_Website.Models.Entities
 
         public bool IsDeleted { get; set; }
 
-        public ICollection<Post> Posts { get; set; } = new List<Post>();
+        public ICollection<DesplayPostViewModel> Posts { get; set; } = new List<DesplayPostViewModel>();
         public ICollection<Like> Likes { get; set; } = new List<Like>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 

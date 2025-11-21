@@ -1,7 +1,6 @@
-﻿using Blog_Website.Extentions;
-using Blog_Website.Hubs;
+﻿using Blog_Website.Hubs;
 using Blog_Website.Services.IServices;
-using Blog_Website.ViewModel.Comment;
+using Blog_Website.ViewModel.Comments;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;

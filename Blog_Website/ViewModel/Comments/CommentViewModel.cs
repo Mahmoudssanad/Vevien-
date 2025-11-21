@@ -1,7 +1,6 @@
-﻿using Blog_Website.Models.Entities;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace Blog_Website.ViewModel.Comment
+namespace Blog_Website.ViewModel.Comments
 {
     public class CommentViewModel
     {

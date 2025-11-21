@@ -1,6 +1,7 @@
-﻿@model Post
+﻿@model PostDetailsViewModel
 @using Blog_Website.Helpers
 @using System.Security.Claims
+@using Blog_Website.ViewModel.Posts
 
 
 @{
@@ -36,21 +37,21 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
         <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
                 <a asp-action="Profile" asp-controller="Profile" asp-route-userId="@Model.UserId">
-                    <img src="@(string.IsNullOrEmpty(Model.ApplicationUser?.ImageURL)
+                    <img src="@(string.IsNullOrEmpty(Model.User?.ImageURL)
                         ? Url.Content("~/images/profile/default.png")
-                        : Url.Content(Model.ApplicationUser.ImageURL))"
+                        : Url.Content(Model.User.ImageURL))"
                     class="rounded-circle me-2"
                     style="width: 40px; height: 40px; object-fit: cover;" />
                 </a>
                 <div>
                     <a href="/Profile/Profile?userId=@Model.UserId"
                        class="fw-semibold text-decoration-none text-dark">
-                        <h6 class="fw-bold mb-0">@Model.ApplicationUser?.UserName</h6>
+                        <h6 class="fw-bold mb-0">@Model.User?.UserName</h6>
                         <small class="text-muted">@TimeFormatter.ToInstagramStyle(Model.CreatedDate)</small>
                     </a>
                 </div>
             </div>
-            @if (Model.UserId == User.FindFirst(ClaimTypes.NameIdentifier).Value)
+            @if (Model.UserId == User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
             {
                 <div class="dropdown">
                     <button class="btn btn-light border-0" data-bs-toggle="dropdown">
@@ -58,8 +59,8 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
                         <i class="bi bi-three-dots"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="@Url.Action("Edit", "Post", new { postId = Model.Id })">Edit</a></li>
-                        <li><a class="dropdown-item text-danger" href="@Url.Action("Delete", "Post", new { postId = Model.Id })">Delete</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("Edit", "Post", new { postId = Model.PostId })">Edit</a></li>
+                        <li><a class="dropdown-item text-danger" href="@Url.Action("Delete", "Post", new { postId = Model.PostId })">Delete</a></li>
                     </ul>
                 </div>
             }
@@ -84,7 +85,7 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
 
         <!-- زر لفتح المودال -->
         <button class="btn btn-link p-0 open-likes-modal"
-        data-post-id="@Model.Id"
+        data-post-id="@Model.PostId"
         data-bs-toggle="modal"
         data-bs-target="#likesModal">
             @Model.TempLikesCount Likes
@@ -95,7 +96,7 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
             <div class="d-flex align-items-center mb-2">
 
                 <button class="btn btn-light btn-sm me-3 like-btn"
-                data-target-id="@Model.Id"
+                data-target-id="@Model.PostId"
                 data-target-type="Post">
                     @if (Model.TempLikesCount > 0)
                     {
@@ -123,7 +124,7 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
 
         <!-- 🔹 Comments Section -->
         @* <div class="card-body pt-2"> *@
-        <div class="comments-container" id="post-@Model.Id">
+        <div class="comments-container" id="post-@Model.PostId">
             <h6 class="fw-bold mb-3">Comments</h6>
 
             @if (Model.Comments != null && Model.Comments.Any())
@@ -140,7 +141,7 @@ integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0m
 
             <!-- 🔹 Add Comment -->
             <form id="commentForm" class="mt-3">
-                <input type="hidden" name="PostId" value="@Model.Id" />
+                <input type="hidden" name="PostId" value="@Model.PostId" />
                 <div class="input-group">
                     <input type="text" name="Content" class="form-control rounded-start-pill" placeholder="Add a comment..." required />
                     <button type="submit" class="btn btn-primary rounded-end-pill">Post</button>

@@ -2,8 +2,7 @@
 using Blog_Website.Models.Data;
 using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
-using Blog_Website.ViewModel.Comment;
-using Blog_Website.ViewModel.Notification;
+using Blog_Website.ViewModel.Comments;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,5 +1,6 @@
-﻿using Blog_Website.Models.Entities;
-using Blog_Website.ViewModel.Post;
+﻿using Blog_Website.Generics;
+using Blog_Website.Models.Entities;
+using Blog_Website.ViewModel.Posts;
 
 namespace Blog_Website.Services.IServices
 {
@@ -8,13 +9,13 @@ namespace Blog_Website.Services.IServices
         Task AddAsync(PostViewModel model);
         Task UpdateAsync(PostViewModel newPost, int postId);
         Task DeleteAsync(int postId);
-        Task<Post> GetByIdAsync(int postId);
-        Task<List<PostViewModel>> GetAllUserPostsAsync(string userId);
-        Task<List<PostViewModel>> MyPosts(string userId);
-        Task<List<Post>> GetPublicPosts();
-        Task<List<Post>> GetFriendsPosts();
+        Task<PostDetailsViewModel> GetByIdAsync(int postId, string currentUserId);
+        Task<PageResult<PostViewModel>> GetAllUserPostsAsync(string userId, string currentUserId, int pageSize, int pageNumber);
+        Task<List<PostViewModel>> GallaryPosts(string userId, string currentUserId);
+        //Task<List<DisplayPostViewModel>> GetPublicPosts();
+        Task<List<DisplayPostViewModel>> GetFriendsPosts(string currentUserId);
 
-        Task<int> VisiblePostsCount(string userId);
+        Task<int> PostsCount(string userId, string currentUserId);
         Task<int> MyPostsCount(string userId);
 
     }

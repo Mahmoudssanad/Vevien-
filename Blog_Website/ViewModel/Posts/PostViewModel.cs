@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using NuGet.Protocol.Core.Types;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Blog_Website.ViewModel.Post
+namespace Blog_Website.ViewModel.Posts
 {
     public class PostViewModel
     {
