@@ -4,6 +4,6 @@ namespace Blog_Website.Services.IServices
 {
     public interface ISearchService
     {
-        Task<List<ApplicationUser>> UsersSearch();
+        Task<List<ApplicationUser>> UsersSearch(string userId);
     }
 }

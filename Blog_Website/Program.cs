@@ -1,4 +1,5 @@
-﻿using Blog_Website.Hubs;
+﻿using Blog_Website.CustomValidation;
+using Blog_Website.Hubs;
 using Blog_Website.Middleware;
 using Blog_Website.Models.Data;
 using Blog_Website.Models.Entities;
@@ -15,6 +16,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpContextAccessor();
 
+
 // أكثر من عدد معين خلال فترة زمنية محددة API جاهز يمنع المستخدم من طلب نفس الـ Middleware 
 builder.Services.AddRateLimiter(options =>
 {
@@ -26,12 +28,14 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+
 // Register session service
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout = TimeSpan.FromMinutes(300);
     options.Cookie.HttpOnly = true;
 });
+
 
 // Register DbContext service
 builder.Services.AddDbContext<AppDbContext>(
@@ -46,14 +50,14 @@ builder.Services.AddDbContext<AppDbContext>(
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     // الرموز دي كلها وكل الحروف والمسافات كمان UserName field عشان يقبل في ال 
-    options.User.AllowedUserNameCharacters =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ";
+    options.User.AllowedUserNameCharacters = null!;
 })
+    .AddUserValidator<CustomUserValidator>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddSignalR();
 
+builder.Services.AddSignalR();
 
 
 // Register some services
@@ -64,8 +68,6 @@ builder.Services.AddScoped<IFollowService, FollowService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-// When use signalR with comment partial view
-builder.Services.AddScoped<IViewRenderService, ViewRenderService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IImageService, ImageService>();
@@ -87,9 +89,9 @@ app.UseSession();
 app.UseRateLimiter();
 app.UseRouting();
 
-app.MapHub<CommentHub>("/commentHub");
 app.MapHub<NotificationHub>("/notificationHub");
 
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<DeleteAccountMiddleware>();
 

@@ -17,18 +17,28 @@
         {
             <li>
                 <a class="dropdown-item @(notification.IsRead ? "" : "unread")"
-                   href="/Notification/Read/@notification.Id">
+                href="/Notification/Read/@notification.Id">
                     @notification.Title
                 </a>
             </li>
         }
 
         <!-- زر تحميل المزيد -->
-        <li>
-            <button class="dropdown-item text-center text-primary" id="load-more-btn">
-                Load more
-            </button>
-        </li>
+        @if (Model.Any())
+        {
+            <li>
+                <button class="dropdown-item text-center text-primary" id="load-more-btn">
+                    Load more
+                </button>
+            </li>
+        }
+        else
+        {
+            <li>
+                <p>There is no any notifications</p>
+            </li>
+        }
+
     </ul>
 </div>
 

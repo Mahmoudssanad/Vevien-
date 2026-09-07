@@ -2,7 +2,6 @@
 using Blog_Website.Services.IServices;
 using Blog_Website.ViewModel.Comments;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
 namespace Blog_Website.Controllers
@@ -10,16 +9,13 @@ namespace Blog_Website.Controllers
     public class CommentController : Controller
     {
         private readonly ICommentService _commentService;
-        private readonly IHubContext<CommentHub> _hubContext;
-        private readonly IViewRenderService _viewRenderService;
 
-        public CommentController(ICommentService commentService, IHubContext<CommentHub> hubContext, IViewRenderService viewRenderService)
+        public CommentController(ICommentService commentService)
         {
             _commentService = commentService;
-            _hubContext = hubContext;
-            _viewRenderService = viewRenderService;
         }
 
+        [HttpPost]
         public async Task<IActionResult> AddComment(CommentViewModel model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -29,16 +25,20 @@ namespace Blog_Website.Controllers
 
             var comment = await _commentService.AddCommentAsync(model);
 
-            #region SignalR
-            //var commentHtml = await _viewRenderService.RenderToStringAsync("_CommentPartial", comment);
-            //await _hubContext.Clients.All.SendAsync("ReceiveComment", model.PostId, commentHtml);
-            #endregion
-
-            //return Ok();
-
             return PartialView("_CommentPartial", comment);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Delete(int commentId)
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (currentUserId is null)
+                return Unauthorized();
+
+            var result = await _commentService.DeleteCommentAsync(commentId, currentUserId);
+
+            return Json(result);
+        }
 
     }
 }

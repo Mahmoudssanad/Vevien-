@@ -39,13 +39,41 @@ namespace Blog_Website.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var emailExseting = await _userManager.FindByEmailAsync(model.Email!);
+            var emailExiseting = await _userManager.FindByEmailAsync(model.Email!);
 
-            if(emailExseting is not null && !emailExseting.IsDeleted)
+            if(emailExiseting is not null && !emailExiseting.IsDeleted)
             {
                 ModelState.AddModelError("", "Email already exist");
                 return View(model);
             }
+
+            var user = new ApplicationUser
+            {
+                UserName = model.UserName,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber
+            };
+
+            // قبل التسجيل فعليًا Identity بتاع الـ Validation 
+            var usernameValidation = await _userManager.UserValidators.First().ValidateAsync(_userManager, user!);
+            var passwordValidation = await _userManager.PasswordValidators.First().ValidateAsync(_userManager, user!, model.Password);
+
+            if (!usernameValidation.Succeeded)
+            {
+                foreach (var error in usernameValidation.Errors)
+                    ModelState.AddModelError("UserName", error.Description);
+            }
+
+            if (!passwordValidation.Succeeded)
+            {
+                foreach (var error in passwordValidation.Errors)
+                    ModelState.AddModelError("Password", error.Description);
+            }
+
+            // لو فيه Errors — نرجع للفورم بدل ما نعمل CreateAsync
+            if (!usernameValidation.Succeeded || !passwordValidation.Succeeded)
+                return View(model);
+
 
             // Save user data in session
             HttpContext.Session.SetString("RegisterData", JsonConvert.SerializeObject(model));
@@ -64,6 +92,7 @@ namespace Blog_Website.Controllers
 
             if (flow == OtpFlow.Register && registerData is null)
             {
+                
                 // المستخدم حاول يدخل مباشرة باللينك
                 TempData["Error"] = "You cannot access this page directly.";
                 return RedirectToAction("Register");
@@ -97,7 +126,7 @@ namespace Blog_Website.Controllers
 
                     if (!result.Succeeded)
                     {
-                        ModelState.AddModelError("", "Error creating account");
+                        ModelState.AddModelError("", "Error occured while creating account");
                         return View(otpModel);
                     }
 

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Blog_Website.Services
 {
-    public class NotificationService(AppDbContext _context, IHubContext<NotificationHub> _hubContext) : INotificationService
+    public class NotificationService(DbContextOptions<AppDbContext> _context, IHubContext<NotificationHub> _hubContext) : INotificationService
     {
         public async Task CreateAsync(AddNotificationViewModel notificationModel)
         {
@@ -24,8 +24,10 @@ namespace Blog_Website.Services
                 Type = notificationModel.Type,
             };
 
-            await _context.Notifications.AddAsync(notification);
-            await _context.SaveChangesAsync();
+            using var ctx = new AppDbContext(_context);
+            await ctx.Notifications.AddAsync(notification);
+            await ctx.SaveChangesAsync();
+
 
             await _hubContext.Clients.User(notification.ReceiverId!)
                 .SendAsync("ReceiveNotification", notification.Title, notification.RedirectUrl);
@@ -44,8 +46,11 @@ namespace Blog_Website.Services
 
         public async Task<List<Notification>> GetUserNotificationsAsync(string userId, int pageNumber = 1, int pageSize = 5)
         {
-            var query = _context.Notifications
+            using var ctx = new AppDbContext(_context);
+
+            var query = ctx.Notifications
                 .Include(x => x.Sender)
+                .AsNoTracking()
                 .Where(x => x.ReceiverId == userId && !x.Receiver!.IsDeleted)
                 .OrderByDescending(x => x.CreatedDate);
 
@@ -59,13 +64,15 @@ namespace Blog_Website.Services
 
         public async Task<Notification> MarkAsReadAsync(int id)
         {
-            var notification = await _context.Notifications.FindAsync(id);
+            using var ctx = new AppDbContext(_context);
+
+            var notification = await ctx.Notifications.FindAsync(id);
 
             if (notification != null && !notification.IsRead)
             {
                 notification.IsRead = true;
-                _context.Notifications.Update(notification);
-                await _context.SaveChangesAsync();
+                ctx.Notifications.Update(notification);
+                await ctx.SaveChangesAsync();
             }
 
             return notification!; // رجعه بعد التعديل
@@ -73,7 +80,9 @@ namespace Blog_Website.Services
 
         public async Task SendNotificationAsync(Notification notification)
         {
-            notification.Sender = await _context.Users
+            using var ctx = new AppDbContext(_context);
+
+            notification.Sender = await ctx.Users
                 .Where(x => x.Id == notification.SenderId && !x.IsDeleted)
                 .FirstOrDefaultAsync();
 

@@ -13,8 +13,10 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
           crossorigin="anonymous"
           referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-    integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0myeS8K/Np9nAZ8L6mGZPR3U9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0myeS8K/Np9nAZ8L6mGZPR3U9g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <header>
@@ -103,6 +105,10 @@
         </main>
     </div>
 
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
     <script src="~/microsoft-signalr/signalr.js"></script>
     <script>
         const connection = new signalR.HubConnectionBuilder()
@@ -130,11 +136,6 @@
             .then(() => console.log("✅ SignalR connected"))
             .catch(err => console.error("❌ Connection error:", err));
     </script>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
         const input = document.getElementById('liveSearchInput');
@@ -170,11 +171,8 @@
         });
     </script>
 
-
     @await RenderSectionAsync("Scripts", required: false)
-
     
 </body>
 </html>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 

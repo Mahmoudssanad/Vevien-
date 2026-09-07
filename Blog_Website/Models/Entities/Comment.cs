@@ -6,6 +6,8 @@ namespace Blog_Website.Models.Entities
     {
         public int Id { get; set; }
 
+        //public int ParentCommentId {  get; set; }
+
         public string? Content { get; set; }
 
         public string? ImageUrl { get; set; }
@@ -19,9 +21,9 @@ namespace Blog_Website.Models.Entities
 
         [ForeignKey("Post")]
         public int PostId { get; set; }
-        public DesplayPostViewModel? Post { get; set; }
+        public Post? Post { get; set; }
 
-        [NotMapped]
-        public ICollection<Like> Likes { get; set; } = new List<Like>();
+        //[NotMapped]
+        //public ICollection<Like> Likes { get; set; } = new List<Like>();
     }
 }

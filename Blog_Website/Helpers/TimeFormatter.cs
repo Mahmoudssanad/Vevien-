@@ -5,7 +5,7 @@
         public static string ToInstagramStyle(DateTime createdDate)
         {
             var now = DateTime.UtcNow;
-            var diff = now - createdDate.ToUniversalTime();
+            var diff = now - createdDate.ToLocalTime().ToUniversalTime();
 
             if (diff.TotalSeconds < 60)
                 return $"{(int)diff.TotalSeconds}s ago";

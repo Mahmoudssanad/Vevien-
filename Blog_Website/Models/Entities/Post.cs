@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Blog_Website.Models.Entities
 {
-    public class DesplayPostViewModel
+    public class Post
     {
         public int Id { get; set; }
 

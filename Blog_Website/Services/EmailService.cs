@@ -32,9 +32,9 @@ namespace Blog_Website.Services
 
             // host => هو السيرفر اللي هنتعامل معاه 
             // SmtpClient => المسؤال عن ارسال الايميل من جهازك الي ايميل المستخدم 
-            using var smtp = new SmtpClient(host)
+            using var smtp = new SmtpClient(host, port)
             {
-                Port = port, // اللي هنكلم السيرفر عليه port رقم ال 
+                UseDefaultCredentials = false,
 
                 // بيانات تسجيل الدخول علي السيرفر. الايميل اللي هبعت من عليه والباسورد بتاعه بيشوفهم الاول صح ولا لا 
                 Credentials = new NetworkCredential(username, password),
@@ -61,6 +61,7 @@ namespace Blog_Website.Services
             }catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                throw;
             }
         }
 

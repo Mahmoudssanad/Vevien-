@@ -6,6 +6,23 @@
 @{
     ViewData["Title"] = "Public Feed";
 }
+@* <div class="container mt-2"> *@
+@*     <ul class="nav nav-tabs"> *@
+@*         <li class="nav-item"> *@
+@*             <a class="nav-link @(ViewBag.ActiveTab == "ForYou" ? "active" : "")" *@
+@*                href="/Home/Index"> *@
+@*                 For You *@
+@*             </a> *@
+@*         </li> *@
+
+@*         <li class="nav-item"> *@
+@*             <a class="nav-link @(ViewBag.ActiveTab == "Private" ? "active" : "")" *@
+@*                href="/Home/FriendsPosts"> *@
+@*                 Private *@
+@*             </a> *@
+@*         </li> *@
+@*     </ul> *@
+@* </div> *@
 
 @* like modal to show user who liked the post *@
 <div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
@@ -24,7 +41,6 @@
     </div>
 </div>
 
-
 <div class="container mt-4" style="max-width: 650px;">
     @if (Model != null && Model.Any())
     {
@@ -37,9 +53,8 @@
                         <img src="@(string.IsNullOrEmpty(post.User?.ImageURL)
                              ? Url.Content("~/images/profile/default.png")
                              : Url.Content(post.User.ImageURL))"
-                        class="rounded-circle me-2"
-                        style="width: 40px; height: 40px; object-fit: cover;" />
-
+                             class="rounded-circle me-2"
+                             style="width: 40px; height: 40px; object-fit: cover;" />
                     </a>
 
                     <div>
@@ -66,29 +81,28 @@
                 {
                     <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.PostId">
                         <img src="@post.ImageUrl"
-                        class="img-fluid"
-                        alt="Post image"
-                        style="width:100%; max-height:600px; object-fit:cover;" />
+                             class="img-fluid"
+                             alt="Post image"
+                             style="width:100%; max-height:600px; object-fit:cover;" />
                     </a>
                 }
-
 
                 <!-- Post body -->
                 <div class="card-body">
                     @if (!string.IsNullOrWhiteSpace(post.Content))
                     {
-                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.PostId"
+                        <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.PostId"
                            class="fw-semibold text-decoration-none text-dark">
-                        <p class="card-text">@post.Content</p>
+                            <p class="card-text">@post.Content</p>
                         </a>
                     }
 
 
                     <!-- زر لفتح المودال -->
                     <button class="btn btn-link p-0 open-likes-modal"
-                    data-post-id="@post.PostId"
-                    data-bs-toggle="modal"
-                    data-bs-target="#likesModal">
+                            data-post-id="@post.PostId"
+                            data-bs-toggle="modal"
+                            data-bs-target="#likesModal">
                         @post.TempLikesCount Likes
                     </button>
 
@@ -97,9 +111,9 @@
 
                         <!-- زر الإعجاب -->
                         <button class="btn btn-light btn-sm me-3 like-btn"
-                        data-target-id="@post.PostId"
-                        data-target-type="Post">
-                            @if(post.TempLikesCount > 0)
+                                data-target-id="@post.PostId"
+                                data-target-type="Post">
+                            @if (post.TempLikesCount > 0)
                             {
                                 <i class="@(post.IsLikedByCurrentUser
                                 ? "fa-solid fa-heart text-danger"
@@ -107,7 +121,7 @@
                             }
                             else
                             {
-                                <i class= "fa-regular fa-heart" ></i>
+                                <i class="fa-regular fa-heart"></i>
                             }
 
                             <span class="like-text">Like</span>
@@ -115,7 +129,7 @@
                         </button>
 
                         <!-- زر التعليق -->
-                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.PostId"
+                        <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.PostId"
                            class="fw-semibold text-decoration-none text-dark" class="btn btn-light btn-sm comment-btn">
                             <i class="fa-regular fa-comment"></i>
                             <span>Comment</span>
@@ -135,7 +149,6 @@
         </div>
     }
 </div>
-
 
 @section Scripts {
     <script>

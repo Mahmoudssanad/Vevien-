@@ -2,15 +2,12 @@
 @using Blog_Website.Helpers
 @model Blog_Website.Models.Entities.Comment
 
-<div class="comment mb-3 border-bottom pb-2" id="comment-@Model.Id">
+<div class="comment mb-2 border-bottom pb-2" id="comment-@Model.Id">
     <div class="d-flex align-items-start">
-        <!-- User Image -->
         <div class="me-2">
             @if (!string.IsNullOrEmpty(Model.ApplicationUser?.ImageURL))
             {
-                <img src="@Model.ApplicationUser.ImageURL"
-                     alt="User Image"
-                     class="rounded-circle"
+                <img src="@Model.ApplicationUser.ImageURL" class="rounded-circle"
                      style="width:40px; height:40px; object-fit:cover;" />
             }
             else
@@ -19,7 +16,6 @@
             }
         </div>
 
-        <!-- Comment Content -->
         <div class="flex-grow-1">
             <div class="d-flex justify-content-between align-items-center">
                 <a href="/Profile/Profile?userId=@Model.UserId"
@@ -28,6 +24,24 @@
                 </a>
                 <small class="text-muted">@TimeFormatter.ToInstagramStyle(Model.CreatedDate)</small>
 
+                @* 3 نقاط Dropdown يظهر فقط لصاحب التعليق *@
+                @if (Model.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier))
+                {
+                    <div class="dropdown">
+                        <button class="btn btn-light border-0 dropdown-toggle"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item edit-comment-btn" data-comment-id="@Model.Id">Edit</a></li>
+                            <li><a class="dropdown-item text-danger delete-comment-btn" data-comment-id="@Model.Id">Delete</a></li>
+                        </ul>
+                    </div>
+                }
+           
             </div>
 
             <p class="mb-1">@Model.Content</p>
@@ -37,8 +51,19 @@
                 <img src="@Model.ImageUrl"
                      alt="Comment Image"
                      class="mt-2 rounded"
-                     style="max-width:100%; height:auto; border:1px solid #ddd;" />
+                     style="width:150px; height:100px; object-fit:cover; border:1px solid #ddd;" />
             }
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+
+        // 🟦 1) تهيئة جميع الـ dropdowns التي في الصفحة (تشمل التعليقات القديمة)
+        $('.dropdown-toggle').each(function () {
+            new bootstrap.Dropdown(this);
+        });
+
+    });
+</script>

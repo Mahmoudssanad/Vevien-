@@ -1,5 +1,4 @@
-﻿using Blog_Website.Generics;
-using Blog_Website.Models.Entities;
+﻿using Blog_Website.Models.Entities;
 using Blog_Website.Services.IServices;
 using Blog_Website.ViewModel.Posts;
 using Microsoft.AspNetCore.Authorization;

@@ -46,7 +46,7 @@ namespace Blog_Website.Services
             var user = await _context.Users.FindAsync(userId)
                ?? throw new InvalidOperationException("User not found");
 
-            var newPost = new DesplayPostViewModel
+            var newPost = new Post
             {
                 UserId = userId,
                 Visible = model.Visible,
@@ -89,6 +89,7 @@ namespace Blog_Website.Services
 
                 // use parallel task instead of for loop
                 var tasks = followers.Where(x => !string.IsNullOrEmpty(x.Id))
+                    // DbContext instance => Add notification and projection
                     .Select(follower => _notifiService.CreateAsync(new AddNotificationViewModel
                     {
                         SenderId = userId,
@@ -163,7 +164,7 @@ namespace Blog_Website.Services
             if (post.UserId != userId)
                 throw new UnauthorizedAccessException("You are not allowed to edit this post.");
 
-            if (newPost.Content is null && newPost.ImageFile is null)
+            if (post.Content is null && post.ImageUrl is null)
                 throw new ValidationException("Post must have content or an image.");
 
             var oldImage = post.ImageUrl;
@@ -224,11 +225,8 @@ namespace Blog_Website.Services
                     Public = x.Public,
 
                     // One query replaced foreach
-                    IsLikedByCurrentUser = _context.Likes
-                                .Any(l => l.UserId == currentUserId && l.TargetId == x.Id),
-
-                    TempLikesCount = _context.Likes
-                                .Count(l => l.TargetId == x.Id && !l.ApplicationUser!.IsDeleted)
+                    IsLikedByCurrentUser = _context.Likes.Where(l => l.UserId == currentUserId && l.TargetId == x.Id).Any(),
+                    TempLikesCount = _context.Likes.Where(n => !n.ApplicationUser!.IsDeleted && n.TargetId == x.Id).Count(),
                 }).ToListAsync();
 
             return new PageResult<PostViewModel>
@@ -280,6 +278,8 @@ namespace Blog_Website.Services
                     Content = x.Content,
                     ImageUrl = x.ImageUrl,
                     CreatedDate = x.CreatedDate,
+                    Visible = x.Visible,
+                    Public = x.Public,
                     IsLikedByCurrentUser = _context.Likes.Where(l => l.UserId == currentUserId && l.TargetId == x.Id).Any(),
                     TempLikesCount = _context.Likes.Where(n => !n.ApplicationUser!.IsDeleted && n.TargetId == x.Id).Count(),
                     User = x.ApplicationUser,
@@ -292,6 +292,7 @@ namespace Blog_Website.Services
                             ApplicationUser = c.ApplicationUser,
                             ImageUrl = c.ImageUrl,
                             CreatedDate = c.CreatedDate,
+                            UserId = c.UserId
                         }).ToList()
                 }).FirstOrDefaultAsync();
 
@@ -309,22 +310,19 @@ namespace Blog_Website.Services
                 .GetFollowingsAsync(currentUserId);
 
             var followedUsersId = followedUsers.Select(x => x.Id).ToList();
-
-            var query = _context.Posts
+            
+            var posts = await _context.Posts
                 .AsNoTracking()
                 .Where(post =>
                     !post.ApplicationUser.IsDeleted &&
                     (
                         post.UserId == currentUserId                 // user’s own posts
                         ||
-                        (post.Public && post.Visible)                // public posts
+                        (post.Public)                // public posts
                         ||
                         (!post.Public && post.Visible && followedUsersId.Contains(post.UserId)) // private but from followed users
                     )
-                );
-
-            
-            var posts = await query
+                )
                 .OrderByDescending(x => x.CreatedDate)
                 .Select(x => new DisplayPostViewModel
                 {
@@ -334,7 +332,7 @@ namespace Blog_Website.Services
                     CreatedDate = x.CreatedDate,
                     UserId = x.UserId,
                     User = x.ApplicationUser,
-                    IsLikedByCurrentUser = _context.Likes.Where(x => x.UserId == currentUserId && x.TargetId == x.Id).Any(),
+                    IsLikedByCurrentUser = _context.Likes.Where(l => l.UserId == currentUserId && l.TargetId == x.Id).Any(),
                     TempLikesCount = _context.Likes.Where(n => !n.ApplicationUser!.IsDeleted && n.TargetId == x.Id).Count(),
                 })
                 .ToListAsync();
@@ -362,13 +360,6 @@ namespace Blog_Website.Services
             {
                 visiblePostsCount = await _context.Posts.CountAsync(x => x.UserId == userId);
             }
-
-            return visiblePostsCount;
-        }
-
-        public async Task<int> MyPostsCount(string userId)
-        {
-            var visiblePostsCount = await _context.Posts.CountAsync(x => x.UserId == userId);
 
             return visiblePostsCount;
         }
