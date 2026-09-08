@@ -1,4 +1,4 @@
-# BlogBook — Social Blogging Platform
+# BlogBook — Social Blogging Platform(Deployment => [http://vevien.tryasp.net/]
 
 [![.NET 9.0](https://img.shields.io/badge/.NET-9.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET%20Core-MVC-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet)
