@@ -1,0 +1,41 @@
+﻿@model List<ApplicationUser>
+
+@{
+    ViewData["Title"] = "Followers";
+}
+
+<div class="container mt-4">
+    <h3 class="fw-bold mb-4 text-center">Followers</h3>
+
+    @if (Model.Count == 0)
+    {
+        <div class="text-center text-muted">
+            <p>No followers yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="list-group shadow-sm rounded">
+            @foreach (var user in Model)
+            {
+                <div class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <img src="@(user.ImageURL ?? "/images/profile/default.png")"
+                             alt="Profile" width="50" height="50"
+                             class="rounded-circle me-3" style="object-fit: cover;">
+                        <div>
+                            <h6 class="mb-0 fw-semibold">@user.UserName</h6>
+                            <small class="text-muted">@user.Email</small>
+                        </div>
+                    </div>
+
+                    <a asp-controller="Profile" asp-action="Profile" asp-route-userId="@user.Id"
+                       class="btn btn-sm btn-outline-primary">
+                        View Profile
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
