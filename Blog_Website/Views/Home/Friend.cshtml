@@ -1,0 +1,234 @@
+﻿@using System.Security.Claims
+@using Blog_Website.Helpers
+@using Blog_Website.ViewModel.Posts
+@model IEnumerable<DisplayPostViewModel>
+
+@{
+    ViewData["Title"] = "Public Feed";
+}
+
+@* like modal to show user who liked the post *@
+<div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="likesModalLabel">Liked by</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="likesList" class="list-group">
+                    <!-- Users will be injected here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="container mt-4" style="max-width: 650px;">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var post in Model)
+        {
+            <div class="card mb-4 shadow-sm border-0">
+                <!-- Header: user info -->
+                <div class="card-header bg-white border-0 d-flex align-items-center">
+                    <a href="/Profile/Profile?userId=@post.UserId">
+                        <img src="@(string.IsNullOrEmpty(post.User?.ImageURL)
+                             ? Url.Content("~/images/profile/default.png")
+                             : Url.Content(post.User.ImageURL))"
+                        class="rounded-circle me-2"
+                        style="width: 40px; height: 40px; object-fit: cover;" />
+
+                    </a>
+
+                    <div>
+                        <strong>@post.User?.UserName</strong><br />
+                        <small class="text-muted">@TimeFormatter.ToInstagramStyle(post.CreatedDate)</small>
+                    </div>
+                    @if (post.UserId == User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-light border-0" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Post", new { postId = post.PostId })">Edit</a></li>
+                                <li><a class="dropdown-item text-danger" href="@Url.Action("Delete", "Post", new { postId = post.PostId })">Delete</a></li>
+                            </ul>
+                        </div>
+                    }
+
+                </div>
+
+                <!-- Post Image -->
+                @if (!string.IsNullOrEmpty(post.ImageUrl))
+                {
+                    <a asp-action="Details" asp-controller="Post" asp-route-postId="@post.PostId">
+                        <img src="@post.ImageUrl"
+                        class="img-fluid"
+                        alt="Post image"
+                        style="width:100%; max-height:600px; object-fit:cover;" />
+                    </a>
+                }
+
+
+                <!-- Post body -->
+                <div class="card-body">
+                    @if (!string.IsNullOrWhiteSpace(post.Content))
+                    {
+                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.PostId"
+                           class="fw-semibold text-decoration-none text-dark">
+                        <p class="card-text">@post.Content</p>
+                        </a>
+                    }
+
+
+                    <!-- زر لفتح المودال -->
+                    <button class="btn btn-link p-0 open-likes-modal"
+                    data-post-id="@post.PostId"
+                    data-bs-toggle="modal"
+                    data-bs-target="#likesModal">
+                        @post.TempLikesCount Likes
+                    </button>
+
+
+                    <div class="d-flex justify-content-start align-items-center mt-3">
+
+                        <!-- زر الإعجاب -->
+                        <button class="btn btn-light btn-sm me-3 like-btn"
+                        data-target-id="@post.PostId"
+                        data-target-type="Post">
+                            @if(post.TempLikesCount > 0)
+                            {
+                                <i class="@(post.IsLikedByCurrentUser
+                                ? "fa-solid fa-heart text-danger"
+                                : "fa-regular fa-heart")"></i>
+                            }
+                            else
+                            {
+                                <i class= "fa-regular fa-heart" ></i>
+                            }
+
+                            <span class="like-text">Like</span>
+                            <span class="like-count">@post.TempLikesCount</span>
+                        </button>
+
+                        <!-- زر التعليق -->
+                        <a asp-action ="Details" asp-controller="Post" asp-route-postId="@post.PostId"
+                           class="fw-semibold text-decoration-none text-dark" class="btn btn-light btn-sm comment-btn">
+                            <i class="fa-regular fa-comment"></i>
+                            <span>Comment</span>
+                        </a>
+
+                    </div>
+
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center text-muted mt-5">
+            <i class="fa fa-camera fa-3x mb-3"></i>
+            <p>No public posts available yet.</p>
+        </div>
+    }
+</div>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // 🧩 دالة تحميل المستخدمين داخل المودال
+            function loadLikes(postId) {
+                const likesList = $("#likesList");
+                likesList.empty();
+
+                $.ajax({
+                    type: "GET",
+                    url: `/Like/GetPostLikes?postId=${postId}`,
+                    success: function (users) {
+                        if (users.length === 0) {
+                            likesList.append(`<li class="list-group-item text-muted">No likes yet.</li>`);
+                            return;
+                        }
+
+                        users.forEach(user => {
+                            const profilePic = user.imageURL
+                                ? `<img src="${user.imageURL}" class="rounded-circle me-2" width="35" height="35">`
+                                : `<i class="fa-regular fa-user me-2 fa-lg"></i>`;
+
+                            likesList.append(`
+                                <li class="list-group-item d-flex align-items-center">
+                                    <a href="/Profile/Profile?userId=${user.id}"
+                                       class="text-decoration-none text-dark d-flex align-items-center w-100">
+                                        ${profilePic}
+                                        <span>${user.userName}</span>
+                                    </a>
+                                </li>
+                            `);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        likesList.append(`<li class="list-group-item text-danger">Error loading likes.</li>`);
+                        console.error("❌ AJAX Error:", error);
+                    }
+                });
+            }
+
+            // 🎯 لما المستخدم يضغط على "2 Likes" → افتح المودال
+            $(document).on("click", ".open-likes-modal", function () {
+                const postId = $(this).data("post-id");
+                loadLikes(postId);
+            });
+
+            // ❤️ عند الضغط على زر اللايك
+            $(document).on("click", ".like-btn", function (e) {
+                e.preventDefault();
+
+                const button = $(this);
+                const postId = button.data("target-id"); // نفس قيمة data-post-id في الأزرار الأخرى
+                const targetType = button.data("target-type");
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Like/Toggle",
+                    data: {
+                        TargetId: postId,
+                        TargetType: targetType
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            const icon = button.find("i");
+                            const count = button.find(".like-count");
+
+                            // 🔁 تغيير الأيقونة
+                            if (response.liked) {
+                                icon.removeClass("fa-regular").addClass("fa-solid text-danger");
+                            } else {
+                                icon.removeClass("fa-solid text-danger").addClass("fa-regular");
+                            }
+
+                            // 🔢 تحديث العدد في الزر (Like 1)
+                            count.text(response.count);
+
+                            // 🔢 تحديث العدد اللي في الزر اللي بيعرض "2 Likes"
+                            $(`.open-likes-modal[data-post-id='${postId}']`).text(`${response.count} Likes`);
+
+                            // ✅ لو المودال مفتوح حاليًا، نحدث محتواه
+                            if ($("#likesModal").hasClass("show")) {
+                                loadLikes(postId);
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("❌ AJAX Error:", error);
+                    }
+                });
+            });
+        });
+    </script>
+}
+

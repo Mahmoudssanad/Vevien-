@@ -1,0 +1,162 @@
+﻿using System.Net.Mail;
+using System.Net;
+using Blog_Website.Models.Entities;
+using Blog_Website.Models.Data;
+using Microsoft.EntityFrameworkCore;
+using Blog_Website.Services.IServices;
+using Blog_Website.Enums;
+using Blog_Website.ViewModel.Account;
+using Hangfire;
+
+namespace Blog_Website.Services
+{
+    public class EmailService : IEmailService
+    {
+        private readonly IConfiguration _config;
+        private readonly AppDbContext _context;
+
+        public EmailService(IConfiguration config, AppDbContext context)
+        {
+            _config = config;
+            _context = context;
+        }
+
+        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        {
+            // IConfiguration عن طريق ال appsettings.json اللي في ملف MailSettings section بقراء البيانات اللي موجود في 
+            var host = _config["MailSettings:Host"];
+            var port = int.Parse(_config["MailSettings:Port"]!);
+            var displayName = _config["MailSettings:DisplayName"];
+            var username = _config["MailSettings:Email"];
+            var password = _config["MailSettings:Password"];
+
+            // host => هو السيرفر اللي هنتعامل معاه 
+            // SmtpClient => المسؤال عن ارسال الايميل من جهازك الي ايميل المستخدم 
+            using var smtp = new SmtpClient(host, port)
+            {
+                UseDefaultCredentials = false,
+
+                // بيانات تسجيل الدخول علي السيرفر. الايميل اللي هبعت من عليه والباسورد بتاعه بيشوفهم الاول صح ولا لا 
+                Credentials = new NetworkCredential(username, password),
+
+                // شغل التشفير عند الاتصال 
+                EnableSsl = true
+            };
+
+            var mail = new MailMessage
+            {
+                From = new MailAddress(username!),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true // HTML لو عايز الرسالة فيها
+            };
+
+            // بتحدد مين هيوصل ليه الايميل
+            mail.To.Add(toEmail);
+
+            // هيبعت الرساله للايميل دا عبر الانترنت 
+            try
+            {
+                await smtp.SendMailAsync(mail);
+            }catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task AddAsync(OTP otp)
+        {
+            var existing = await _context.OTPs.FirstOrDefaultAsync(x => x.Email == otp.Email);
+
+            if (existing != null)
+            {
+
+                existing.Code = otp.Code;
+                existing.ExpiryTime = otp.ExpiryTime;
+                existing.IsUsed = false;
+                existing.Email = otp.Email;
+                _context.OTPs.Update(existing);
+            }
+            else
+            {
+                await _context.OTPs.AddAsync(otp);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(OTP otp)
+        {
+            var existing = await _context.OTPs.FirstOrDefaultAsync(x => x.Email == otp.Email);
+
+            if(existing != null)
+            {
+                _context.OTPs.Update(existing);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<OTP> FindByEmailAsync(string email)
+        {
+            var otp = await _context.OTPs.FirstOrDefaultAsync(x => x.Email == email);
+
+            return otp!;
+        }
+
+        // seperate of concern => OTP in controller علشان منعملش التحقق من ال 
+        public async Task<bool> ValidateOtpAsync(string email, string otpCode, OtpFlow flow)
+        {
+            var found = await FindByEmailAsync(email);
+
+            if (found is null) return false;
+
+            var valid = found.Code == otpCode && found.ExpiryTime > DateTime.UtcNow && !found.IsUsed;
+
+            if (!valid) return false;
+
+            found.IsUsed = true;
+            await UpdateAsync(found);
+
+            return true;
+        }
+
+        public async Task GenerateAndSendOtpAsync(string email, string userName)
+        {
+            var otp = new Random().Next(100000, 999999).ToString();
+
+            // Hangfire Package => Exception علشان لو المستخدم مش متصل بالانترنت ميضربش 
+            await SendEmailAsync(email, "Confirm your email", $"Welcome {userName}!<br>Your OTP is: <b>{otp}</b>");
+
+            var otpEntity = new OTP
+            {
+                Email = email,
+                Code = otp,
+                ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                IsUsed = false
+            };
+
+            await AddAsync(otpEntity);
+        }
+
+        public async Task<OtpResult> ResendOtpAsync(string email, OtpFlow otpFlow)
+        {
+            var otp = await _context.OTPs.Where(x => x.Email == email && !x.IsUsed)
+                .OrderByDescending(x => x.ExpiryTime)
+                .FirstOrDefaultAsync();
+
+            if(otp == null) 
+                return OtpResult.Failed("No valid OTP found for this email.");
+
+            otp.Code = new Random().Next(100000, 999999).ToString();
+            otp.ExpiryTime = DateTime.UtcNow.AddMinutes(2);
+            otp.IsUsed = false;
+
+            await UpdateAsync(otp);
+
+            await SendEmailAsync(email, "Resend verification code",
+                                $"Your verification code is: {otp.Code}");
+
+            return OtpResult.SuccessResponse("OTP resent successfully.");
+        }
+    }
+}

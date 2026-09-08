@@ -1,0 +1,39 @@
+﻿
+@model IEnumerable<ProfileViewModel>
+
+@{
+    ViewData["Title"] = "All Users";
+}
+
+<div class="container py-5">
+    <h2 class="fw-bold mb-4 text-center">All Users</h2>
+
+    <div class="row g-4">
+        @foreach (var user in Model)
+        {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100 text-center p-3">
+                        <!-- User Image -->
+                        <a asp-action="Profile" asp-route-userId="@user.UserId" class="text-decoration-none text-dark">
+                            <img src="@(string.IsNullOrEmpty(user.Image) ? Url.Content("~/images/profile/default.png") : Url.Content(user.Image))"
+                                 alt="@user.UserName"
+                                 class="rounded-circle mb-3"
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                        </a>
+
+                        <!-- User Info -->
+                        <div>
+                            <h6 class="fw-bold mb-0">@user.UserName</h6>
+                            <small class="text-muted d-block mb-2">@user.Email</small>
+                        </div>
+
+                        <!-- View Profile -->
+                        <a asp-action="Profile" asp-route-userId="@user.UserId"
+                           class="btn btn-outline-primary btn-sm mt-2">
+                            View Profile
+                        </a>
+                    </div>
+                </div>
+        }
+    </div>
+</div>

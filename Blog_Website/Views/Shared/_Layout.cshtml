@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -6,42 +9,170 @@
     <title>@ViewData["Title"] - Blog_Website</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Blog_Website.styles.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0myeS8K/Np9nAZ8L6mGZPR3U9g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Blog_Website</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <a class="navbar-brand fw-bold text-primary" href="/Home/Index" style="font-size: 1.5rem;">
+                    BlogBook
+                </a>
+                <!-- 🔍 Search Box -->
+                <form class="d-none d-md-flex mx-auto w-50 position-relative" role="search" action="/Search/Index" method="get">
+                    <div class="input-group rounded-pill shadow-sm">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                        </span>
+                        <input type="text" name="query" id="liveSearchInput" class="form-control border-0 bg-light"
+                               placeholder="Search posts, users..." aria-label="Search" autocomplete="off">
+                    </div>
+                    <!-- مكان عرض النتائج -->
+                    <div id="searchResults"
+                         class="position-absolute bg-white shadow-sm rounded w-100 mt-2"
+                         style="z-index: 1000; max-height: 300px; overflow-y: auto;">
+                    </div>
+                </form>
+
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
+                        @if (User.Identity!.IsAuthenticated)
+                        {
+                            <li class="nav-item mx-2">
+                                <a class="nav-link" href="/Home/Index" title="Home">
+                                    <i class="fa-solid fa-house fa-lg"></i>
+                                </a>
+                            </li>
+
+                            <!-- 🌍 Explore -->
+                            <li class="nav-item mx-2">
+                                <a class="nav-link" asp-controller="Profile" asp-action="GetAll" title="Explore">
+                                    <i class="fa-solid fa-compass fa-lg"></i>
+                                </a>
+                            </li>
+
+                            <!-- ➕ Add Post -->
+                            <li class="nav-item mx-2">
+                                <a class="nav-link text-primary" href="/Post/Add" title="Create Post">
+                                    <i class="fa-solid fa-square-plus fa-lg"></i>
+                                </a>
+                            </li>
+
+                            <!-- 💬 Messages -->
+                            <li class="nav-item mx-2">
+                                <a class="nav-link" href="/Message/Index" title="Messages">
+                                    <i class="fa-solid fa-message fa-lg"></i>
+                                </a>
+                            </li>
+
+                            <!-- 🔔 Notifications -->
+                            @await Component.InvokeAsync("Notification")
+
+
+                            <!-- 👤 Profile -->
+                            <li class="nav-item mx-2">
+                                <a class="nav-link" asp-controller="Profile" asp-action="Profile"
+                                   asp-route-userId="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value"
+                                   title="Profile">
+                                    <i class="fa-solid fa-user-circle fa-lg"></i>
+                                </a>
+                            </li>
+                        }
                     </ul>
                 </div>
+
+
+                <form id="logoutForm">
+                    @Html.AntiForgeryToken()
+                    <button id="logoutBtn" type="button" class="btn btn-danger">Logout</button>
+                </form>
             </div>
         </nav>
     </header>
+   
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - Blog_Website - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="~/microsoft-signalr/signalr.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/notificationHub")
+            .build();
+
+        connection.on("ReceiveNotification", function (title, redirectUrl) {
+            // ✅ زود العدد
+            let badge = document.querySelector("#notification-badge");
+            if (badge) {
+                let count = parseInt(badge.innerText || "0");
+                badge.innerText = count + 1;
+            }
+
+            // ✅ أضف الإشعار الجديد للقائمة
+            let list = document.querySelector("#notification-list");
+            if (list) {
+                let li = document.createElement("li");
+                li.innerHTML = `<a class="dropdown-item unread" href="${redirectUrl}">${title}</a>`;
+                list.prepend(li);
+            }
+        });
+
+        connection.start()
+            .then(() => console.log("✅ SignalR connected"))
+            .catch(err => console.error("❌ Connection error:", err));
+    </script>
+
+    <script>
+        const input = document.getElementById('liveSearchInput');
+        const resultsDiv = document.getElementById('searchResults');
+        let timeout = null;
+
+        input.addEventListener('keyup', function () {
+            clearTimeout(timeout);
+            const query = this.value.trim();
+
+            // لو البحث فاضي، اخفي النتائج
+            if (query.length === 0) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            // تأخير بسيط لتقليل عدد الطلبات (debounce)
+            timeout = setTimeout(() => {
+                fetch(`/Search/SearchUsers?query=${encodeURIComponent(query)}`)
+                    .then(res => res.text())
+                    .then(html => {
+                        resultsDiv.innerHTML = html;
+                    })
+                    .catch(err => console.error(err));
+            }, 300);
+        });
+
+        // إخفاء النتائج عند الضغط خارج البحث
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('form[role="search"]')) {
+                resultsDiv.innerHTML = '';
+            }
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
+    
 </body>
 </html>
+

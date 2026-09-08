@@ -1,0 +1,326 @@
+﻿@model PostDetailsViewModel
+@using Blog_Website.Helpers
+@using System.Security.Claims
+@using Blog_Website.ViewModel.Posts
+
+
+@{
+    ViewData["Title"] = "Post Details";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+integrity="sha512-KwuF9Q9hY2GxGV9rk0o6nQbkDGREnYmtM4qGciC2r9J8w8W1F3ThY3YnglGv0myeS8K/Np9nAZ8L6mGZPR3U9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+@* like modal to show user who liked the post *@
+<div class="modal fade" id="likesModal" tabindex="-1" aria-labelledby="likesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="likesModalLabel">Liked by</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="likesList" class="list-group">
+                    <!-- Users will be injected here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5 d-flex justify-content-center">
+    <div class="card shadow-sm border-0 rounded-4" style="max-width: 600px; width: 100%;">
+
+        <!-- 🔹 Header -->
+        <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <a asp-action="Profile" asp-controller="Profile" asp-route-userId="@Model.UserId">
+                    <img src="@(string.IsNullOrEmpty(Model.User?.ImageURL)
+                        ? Url.Content("~/images/profile/default.png")
+                        : Url.Content(Model.User.ImageURL))"
+                    class="rounded-circle me-2"
+                    style="width: 40px; height: 40px; object-fit: cover;" />
+                </a>
+                <div>
+                    <a href="/Profile/Profile?userId=@Model.UserId"
+                       class="fw-semibold text-decoration-none text-dark">
+                        <h6 class="fw-bold mb-0">@Model.User?.UserName</h6>
+                        <small class="text-muted">@TimeFormatter.ToInstagramStyle(Model.CreatedDate)</small>
+                    </a>
+                </div>
+            </div>
+            @if (Model.UserId == User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
+            {
+                <div class="dropdown">
+                    <button class="btn btn-light border-0" data-bs-toggle="dropdown">
+
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="@Url.Action("Edit", "Post", new { postId = Model.PostId })">Edit</a></li>
+                        <li><a class="dropdown-item text-danger" href="@Url.Action("Delete", "Post", new { postId = Model.PostId })">Delete</a></li>
+                    </ul>
+                </div>
+            }
+        </div>
+
+        <!-- 🔹 Post Image -->
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl"
+            alt="Post Image"
+            class="img-fluid"
+            style="width: 100%; object-fit: cover; max-height: 500px;">
+        }
+
+        <!-- 🔹 Post Content -->
+        <div class="card-body pb-0">
+            @if (!string.IsNullOrEmpty(Model.Content))
+            {
+                <p class="mb-3">@Model.Content</p>
+            }
+        </div>
+
+        <!-- زر لفتح المودال -->
+        <button class="btn btn-link p-0 open-likes-modal"
+        data-post-id="@Model.PostId"
+        data-bs-toggle="modal"
+        data-bs-target="#likesModal">
+            @Model.TempLikesCount Likes
+        </button>
+
+        <!-- 🔹 Like Actions -->
+        <div class="card-body pt-2">
+            <div class="d-flex align-items-center mb-2">
+
+                <button class="btn btn-light btn-sm me-3 like-btn"
+                data-target-id="@Model.PostId"
+                data-target-type="Post">
+                    @if (Model.TempLikesCount > 0)
+                    {
+                        @if (Model.IsLikedByCurrentUser)
+                        {
+                            <i class="fa-solid fa-heart text-danger"></i>
+                        }
+                        else
+                        {
+                            <i class="fa-regular fa-heart"></i>
+                        }
+                    }
+                    else
+                    {
+                        <i class="fa-regular fa-heart"></i>
+                    }
+                    <span class="like-text">Like</span>
+                    <span class="like-count">@Model.TempLikesCount</span>
+                </button>
+            </div>
+        </div>
+
+
+        <hr class="my-1">
+
+        <!-- مكان عرض التعليقات -->
+        <div id="commentsContainer">
+            @foreach (var comment in Model.Comments)
+            {
+                @Html.Partial("_CommentPartial", comment)
+            }
+        </div>
+        <div id="newCommentsContainer"></div>
+
+
+        <!-- 🔹 Comments Section -->
+        <form id="commentForm" enctype="multipart/form-data">
+            <input type="hidden" name="PostId" value="@Model.PostId" />
+
+            <div class="d-flex align-items-center">
+                @* <img src="@Model.User!.ImageURL" class="rounded-circle me-2" style="width:40px; height:40px; object-fit:cover;"> *@
+
+                <div class="flex-grow-1 d-flex align-items-center border rounded px-2 py-1">
+                    <textarea name="Content" class="form-control border-0 me-2" placeholder="Write a comment..." style="flex:1; resize:none; height:35px;" rows="1" required></textarea>
+
+                    <label for="ImageFile" class="btn btn-light btn-sm mb-0">
+                        <i class="fa-regular fa-image"></i>
+                    </label>
+                    <input type="file" name="ImageFile" id="ImageFile" accept="image/*" class="d-none" />
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm ms-2">Comment</button>
+            </div>
+        </form>
+
+
+        <!-- 🔹 Footer -->
+        <div class="card-footer bg-white border-0 text-center">
+            <a href="/Home/Index" class="btn btn-outline-secondary rounded-pill px-4">Back</a>
+            
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function () {
+
+            // 🧩 دالة تحميل المستخدمين داخل المودال
+            function loadLikes(postId) {
+                const likesList = $("#likesList");
+                likesList.empty();
+
+                $.ajax({
+                    type: "GET",
+                    url: `/Like/GetPostLikes?postId=${postId}`,
+                    success: function (users) {
+                        if (users.length === 0) {
+                            likesList.append(`<li class="list-group-item text-muted">No likes yet.</li>`);
+                            return;
+                        }
+
+                        users.forEach(user => {
+                            const profilePic = user.imageURL
+                                ? `<img src="${user.imageURL}" class="rounded-circle me-2" width="35" height="35">`
+                                : `<i class="fa-regular fa-user me-2 fa-lg"></i>`;
+
+                            likesList.append(`
+                                <li class="list-group-item d-flex align-items-center">
+                                    <a href="/Profile/Profile?userId=${user.id}"
+                                       class="text-decoration-none text-dark d-flex align-items-center w-100">
+                                        ${profilePic}
+                                        <span>${user.userName}</span>
+                                    </a>
+                                </li>
+                            `);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        likesList.append(`<li class="list-group-item text-danger">Error loading likes.</li>`);
+                        console.error("❌ AJAX Error:", error);
+                    }
+                });
+            }
+
+            // 🎯 لما المستخدم يضغط على "2 Likes" → افتح المودال
+            $(document).on("click", ".open-likes-modal", function () {
+                const postId = $(this).data("post-id");
+                loadLikes(postId);
+            });
+
+            // ❤️ عند الضغط على زر اللايك
+            $(document).on("click", ".like-btn", function (e) {
+                e.preventDefault();
+
+                const button = $(this);
+                const postId = button.data("target-id"); // نفس قيمة data-post-id في الأزرار الأخرى
+                const targetType = button.data("target-type");
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Like/Toggle",
+                    data: {
+                        TargetId: postId,
+                        TargetType: targetType
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            const icon = button.find("i");
+                            const count = button.find(".like-count");
+
+                            // 🔁 تغيير الأيقونة
+                            if (response.liked) {
+                                icon.removeClass("fa-regular").addClass("fa-solid text-danger");
+                            } else {
+                                icon.removeClass("fa-solid text-danger").addClass("fa-regular");
+                            }
+
+                            // 🔢 تحديث العدد في الزر (Like 1)
+                            count.text(response.count);
+
+                            // 🔢 تحديث العدد اللي في الزر اللي بيعرض "2 Likes"
+                            $(`.open-likes-modal[data-post-id='${postId}']`).text(`${response.count} Likes`);
+
+                            // ✅ لو المودال مفتوح حاليًا، نحدث محتواه
+                            if ($("#likesModal").hasClass("show")) {
+                                loadLikes(postId);
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("❌ AJAX Error:", error);
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        $("#commentForm").submit(function(e){
+            e.preventDefault();
+
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: '/Comment/AddComment',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(commentHtml){
+                    // التعليق الجديد يظهر فوق الفورم مباشرة في نفس container
+                    var newComment = $(commentHtml);
+                    $("#newCommentsContainer").prepend(newComment);
+
+                    // ✅ تهيئة dropdown للعنصر الجديد
+                    newComment.find('.dropdown-toggle').each(function () {
+                        new bootstrap.Dropdown(this);
+                    });
+
+                    // إعادة تعيين الفورم
+                    $("#commentForm")[0].reset();
+                },
+                error: function(xhr){
+                    alert("Error adding comment! " + xhr.responseText);
+                }
+            });
+        });
+    </script>
+
+    <script>
+        // Delete comment
+        $(document).on("click", ".delete-comment-btn", function(e) {
+            e.preventDefault();
+
+            var commentId = $(this).data("comment-id");
+
+            $.ajax({
+                type: "GET",
+                url: '/Comment/Delete',
+                data: { commentId: commentId },
+                success: function (result) {
+                    if (result === true) {
+                        $("#comment-" + commentId).fadeOut(300, function() { $(this).remove(); });
+                    } else {
+                        alert("You are not authorized to delete this comment.");
+                    }
+                },
+                error: function() {
+                    alert("Error deleting comment.");
+                }
+            });
+        });
+
+        // Optional: handle Edit (مثال صغير)
+        $(document).on("click", ".edit-comment-btn", function(e) {
+            e.preventDefault();
+            var commentId = $(this).data("comment-id");
+            // هنا ممكن تفتح modal أو inline editor
+            alert("Edit feature for comment: " + commentId);
+        });
+    </script>
+}
+

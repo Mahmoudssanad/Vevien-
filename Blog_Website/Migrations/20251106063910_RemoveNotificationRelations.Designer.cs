@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Blog_Website.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250819013559_Initial")]
-    partial class Initial
+    [Migration("20251106063910_RemoveNotificationRelations")]
+    partial class RemoveNotificationRelations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,6 +52,12 @@ namespace Blog_Website.Migrations
 
                     b.Property<int>("Gender")
                         .HasColumnType("int");
+
+                    b.Property<string>("ImageURL")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -123,7 +129,6 @@ namespace Blog_Website.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -147,11 +152,9 @@ namespace Blog_Website.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("FollowerId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FollowingId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -159,7 +162,8 @@ namespace Blog_Website.Migrations
                     b.HasIndex("FollowingId");
 
                     b.HasIndex("FollowerId", "FollowingId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[FollowerId] IS NOT NULL AND [FollowingId] IS NOT NULL");
 
                     b.ToTable("Follows");
                 });
@@ -172,27 +176,19 @@ namespace Blog_Website.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CommentId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PostId")
+                    b.Property<int>("TargetId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Type")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("TargetType")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CommentId");
-
-                    b.HasIndex("PostId");
 
                     b.HasIndex("UserId");
 
@@ -207,56 +203,67 @@ namespace Blog_Website.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CommentId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("FollowId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FollowId1")
-                        .HasColumnType("int");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
 
-                    b.Property<int>("LikeId")
-                        .HasColumnType("int");
+                    b.Property<string>("ReceiverId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("RedirectUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("TargetId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("Type")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CommentId")
-                        .IsUnique();
+                    b.HasIndex("ReceiverId");
 
-                    b.HasIndex("FollowId");
-
-                    b.HasIndex("FollowId1")
-                        .IsUnique();
-
-                    b.HasIndex("LikeId")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
+                    b.HasIndex("SenderId");
 
                     b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Blog_Website.Models.Entities.OTP", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ExpiryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OTPs");
                 });
 
             modelBuilder.Entity("Blog_Website.Models.Entities.Post", b =>
@@ -440,9 +447,7 @@ namespace Blog_Website.Migrations
 
                     b.HasOne("Blog_Website.Models.Entities.ApplicationUser", "ApplicationUser")
                         .WithMany("Comments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("ApplicationUser");
 
@@ -454,14 +459,12 @@ namespace Blog_Website.Migrations
                     b.HasOne("Blog_Website.Models.Entities.ApplicationUser", "Follower")
                         .WithMany("Followings")
                         .HasForeignKey("FollowerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Blog_Website.Models.Entities.ApplicationUser", "Following")
                         .WithMany("Followers")
                         .HasForeignKey("FollowingId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Follower");
 
@@ -470,70 +473,28 @@ namespace Blog_Website.Migrations
 
             modelBuilder.Entity("Blog_Website.Models.Entities.Like", b =>
                 {
-                    b.HasOne("Blog_Website.Models.Entities.Comment", "Comment")
-                        .WithMany("Likes")
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Blog_Website.Models.Entities.Post", "Post")
-                        .WithMany("Likes")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Blog_Website.Models.Entities.ApplicationUser", "ApplicationUser")
                         .WithMany("Likes")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("ApplicationUser");
-
-                    b.Navigation("Comment");
-
-                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Blog_Website.Models.Entities.Notification", b =>
                 {
-                    b.HasOne("Blog_Website.Models.Entities.Comment", "Comment")
-                        .WithOne("Notification")
-                        .HasForeignKey("Blog_Website.Models.Entities.Notification", "CommentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("Blog_Website.Models.Entities.ApplicationUser", "Receiver")
+                        .WithMany("ReceivedNotifications")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Blog_Website.Models.Entities.Comment", "Follow")
-                        .WithMany()
-                        .HasForeignKey("FollowId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("Blog_Website.Models.Entities.ApplicationUser", "Sender")
+                        .WithMany("SentNotifications")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Blog_Website.Models.Entities.Follow", null)
-                        .WithOne("Notification")
-                        .HasForeignKey("Blog_Website.Models.Entities.Notification", "FollowId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Receiver");
 
-                    b.HasOne("Blog_Website.Models.Entities.Like", "Like")
-                        .WithOne("Notification")
-                        .HasForeignKey("Blog_Website.Models.Entities.Notification", "LikeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Blog_Website.Models.Entities.ApplicationUser", "ApplicationUser")
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApplicationUser");
-
-                    b.Navigation("Comment");
-
-                    b.Navigation("Follow");
-
-                    b.Navigation("Like");
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("Blog_Website.Models.Entities.Post", b =>
@@ -608,36 +569,16 @@ namespace Blog_Website.Migrations
 
                     b.Navigation("Likes");
 
-                    b.Navigation("Notifications");
-
                     b.Navigation("Posts");
-                });
 
-            modelBuilder.Entity("Blog_Website.Models.Entities.Comment", b =>
-                {
-                    b.Navigation("Likes");
+                    b.Navigation("ReceivedNotifications");
 
-                    b.Navigation("Notification")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Blog_Website.Models.Entities.Follow", b =>
-                {
-                    b.Navigation("Notification")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Blog_Website.Models.Entities.Like", b =>
-                {
-                    b.Navigation("Notification")
-                        .IsRequired();
+                    b.Navigation("SentNotifications");
                 });
 
             modelBuilder.Entity("Blog_Website.Models.Entities.Post", b =>
                 {
                     b.Navigation("Comments");
-
-                    b.Navigation("Likes");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,82 @@
+﻿@using Blog_Website.ViewModel.Posts
+@model PostViewModel
+@{
+    ViewData["Title"] = "Edit Post";
+}
+
+<div class="container py-5" style="max-width: 700px;">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white border-0 text-center py-3">
+            <h5 class="fw-bold mb-0">Edit Post</h5>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="Edit" asp-route-postId = "@Model.Id" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ImageUrl" />
+
+
+                <!-- Image Preview -->
+                <div class="text-center mb-4">
+                    <label for="ImageFile" class="d-block">
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <img id="imagePreview" src="@Model.ImageUrl"
+                                 class="rounded-3 border"
+                                 style="width: 100%; max-height: 400px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <img id="imagePreview" src="~/images/posts/placeholder.png"
+                                 class="rounded-3 border"
+                                 style="width: 100%; max-height: 400px; object-fit: cover;" />
+                        }
+                    </label>
+
+                    <input asp-for="ImageFile" type="file" accept="image/*"
+                           class="form-control mt-3" onchange="previewImage(event)" />
+                </div>
+
+                <!-- Caption -->
+                <div class="mb-3">
+                    <label asp-for="Content" class="form-label fw-semibold">Caption</label>
+                    <textarea asp-for="Content" class="form-control rounded-3" rows="3"
+                              placeholder="Write something..."></textarea>
+                    <span asp-validation-for="Content" class="text-danger small"></span>
+                </div>
+
+                <!-- Visibility -->
+                <div class="d-flex justify-content-between mb-3">
+                    <div class="form-check">
+                        <input asp-for="Public" class="form-check-input" type="checkbox" id="Public" />
+                        <label class="form-check-label" for="Public">Public</label>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="Visible" class="form-check-input" type="checkbox" id="Visible" />
+                        <label class="form-check-label" for="Visible">Visible</label>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary rounded-pill px-5">Save Changes</button>
+                    <a href="/Home/Index" class="btn btn-outline-secondary rounded-pill px-4 ms-2">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const output = document.getElementById('imagePreview');
+                output.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
+}

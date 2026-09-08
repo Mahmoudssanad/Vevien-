@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Blog_Website.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Blog_Website.Models.Entities
 {
@@ -6,22 +7,15 @@ namespace Blog_Website.Models.Entities
     {
         public int Id { get; set; }
 
-        public string? Type { get; set; }
-
         public DateTime CreatedDate { get; set; }
 
+
         [ForeignKey("ApplicationUser")]
-        public string UserId { get; set; }
-        public ApplicationUser ApplicationUser { get; set; }
+        public string? UserId { get; set; }
+        public ApplicationUser? ApplicationUser { get; set; }
 
-        [ForeignKey("Post")]
-        public int PostId {  get; set; }
-        public Post Post { get; set; }
-
-        [ForeignKey("Comment")]
-        public int CommentId { get; set; }
-        public Comment Comment { get; set; }
-
-        public Notification Notification { get; set; }
+        // بدل ما نربط بـ PostId فقط، نخلي العلاقة Polymorphic
+        public int TargetId { get; set; } // ممكن تكون Id البوست أو Id الكومنت
+        public LikeTargetType TargetType { get; set; } // نوع الكيان اللي متعمل عليه لايك
     }
 }
